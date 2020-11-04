@@ -4,16 +4,35 @@ import ast.Program;
 
 import java.util.ArrayList;
 
-public class MethodRenameUtils {
+public class MethodRenaming {
 
     Program program;
     String methodName;
+    String newMethodName;
     int lineNumber;
 
-    public MethodRenameUtils(Program program, String methodName, int lineNumber) {
+    public MethodRenaming(Program program, String methodName, String newMethodName, int lineNumber) {
         this.program = program;
         this.methodName = methodName;
+        this.newMethodName = newMethodName;
         this.lineNumber = lineNumber;
+    }
+
+    public void renameMethod(String originalClassName) {
+        ArrayList<String> affectedClasses = getAffectedClasses(originalClassName);
+        renameMethodDeclarations(affectedClasses);
+    }
+
+    public void renameMethodDeclarations(ArrayList<String> classesNames) {
+        ClassDecl classNode;
+        MethodDecl methodNode;
+        for (String className: classesNames) {
+            classNode = getClassNode(className);
+            methodNode = getMethodNode(classNode, methodName);
+            if (methodNode != null) {
+                methodNode.setName(newMethodName);
+            }
+        }
     }
 
     public ArrayList<String> getAffectedClasses(String originalClassName) {
@@ -74,13 +93,17 @@ public class MethodRenameUtils {
         return null;
     }
 
-    public boolean doesClassContainMethod(ClassDecl classNode, String methodName) {
+    public MethodDecl getMethodNode(ClassDecl classNode, String methodName) {
         for (MethodDecl methoddecl : classNode.methoddecls()) {
             if (methoddecl.name().equals(methodName)) {
-                return true;
+                return methoddecl;
             }
         }
-        return false;
+        return null;
+    }
+
+    public boolean doesClassContainMethod(ClassDecl classNode, String methodName) {
+        return getMethodNode(classNode, methodName) != null;
     }
 
 }
