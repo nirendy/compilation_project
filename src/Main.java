@@ -53,7 +53,7 @@ public class Main {
                         throw new IllegalArgumentException("unknown rename type " + type);
                     }
 
-                    new Renaming(prog, originalName, newName, Integer.parseInt(originalLine)).rename();
+                    RenamingFactory.rename(prog, originalName, newName, Integer.parseInt(originalLine));
 
                 } else {
                     throw new IllegalArgumentException("unknown command line action " + action);
