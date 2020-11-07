@@ -1,28 +1,23 @@
-import ast.AstLineNumberVisitor;
 import ast.Program;
-import ast.RenamingType;
 
-public class Renaming {
+public abstract class Renaming {
 
     Program program;
-    String originalName;
-    String newName;
-    int lineNumber;
+    String classOfRenamedObject;
+    String methodOfRenamedObject;
+    String objectName;
+    String newObjectName;
+    ProgramUtils utils;
 
-    public Renaming(Program program, String originalName, String newName, int lineNumber) {
+    public Renaming(Program program, String classOfRenamedObject, String methodOfRenamedObject, String objectName,
+                    String newObjectName) {
         this.program = program;
-        this.originalName = originalName;
-        this.newName = newName;
-        this.lineNumber = lineNumber;
+        this.classOfRenamedObject = classOfRenamedObject;
+        this.methodOfRenamedObject = methodOfRenamedObject;
+        this.objectName = objectName;
+        this.newObjectName = newObjectName;
+        this.utils = new ProgramUtils(program);
     }
 
-    public void rename() {
-        AstLineNumberVisitor lineNumberVisitor = new AstLineNumberVisitor(originalName, lineNumber);
-        lineNumberVisitor.visit(program);
-
-        if (lineNumberVisitor.renamedObject == RenamingType.METHOD) {
-            MethodRenaming methodRenaming = new MethodRenaming(program, originalName, newName, lineNumber);
-            methodRenaming.renameMethod(lineNumberVisitor.getClassOfRenamedObject());
-        }
-    }
+    public abstract void rename();
 }
