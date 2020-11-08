@@ -1,11 +1,11 @@
-package ast;
+import ast.*;
 
-public class AstVariableRenameVisitor implements Visitor {
+public class AstVariableRenamingVisitor implements Visitor {
 
     String variableName;
     String newVariableName;
 
-    public AstVariableRenameVisitor(String variableName, String newVariableName) {
+    public AstVariableRenamingVisitor(String variableName, String newVariableName) {
         this.variableName = variableName;
         this.newVariableName = newVariableName;
     }
@@ -99,7 +99,7 @@ public class AstVariableRenameVisitor implements Visitor {
 
     @Override
     public void visit(AddExpr e) {
-        visitBinaryExpr(e);;
+        visitBinaryExpr(e);
     }
 
     @Override
@@ -142,7 +142,12 @@ public class AstVariableRenameVisitor implements Visitor {
     public void visit(FalseExpr e) {}
 
     @Override
-    public void visit(IdentifierExpr e) {}
+    public void visit(IdentifierExpr e) {
+        if (e.id().equals(variableName)) {
+            // Renaming a reference of the variable
+            e.setId(newVariableName);
+        }
+    }
 
     public void visit(ThisExpr e) {}
 
@@ -169,12 +174,7 @@ public class AstVariableRenameVisitor implements Visitor {
     public void visit(IntArrayAstType t) {}
 
     @Override
-    public void visit(RefType t) {
-        if (t.id().equals(variableName)) {
-            // Renaming a reference of the variable
-            t.setId(newVariableName);
-        }
-    }
+    public void visit(RefType t) {}
 
     private void visitBinaryExpr(BinaryExpr e) {
         e.e1().accept(this);

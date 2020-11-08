@@ -1,4 +1,3 @@
-import ast.AstVariableRenameVisitor;
 import ast.MethodDecl;
 import ast.Program;
 import ast.VarDecl;
@@ -10,6 +9,7 @@ public class LocalVariableRenaming extends Renaming {
         super(program, classOfRenamedObject, methodOfRenamedObject, variableName, newVariableName);
     }
 
+    @Override
     public void rename() {
         MethodDecl methodNode = utils.getMethodNode(classOfRenamedObject, methodOfRenamedObject);
 
@@ -18,7 +18,7 @@ public class LocalVariableRenaming extends Renaming {
         varDecl.setName(newObjectName);
 
         /* Renaming all the occurrences of the variable in the method */
-        AstVariableRenameVisitor visitor = new AstVariableRenameVisitor(objectName, newObjectName);
+        AstVariableRenamingVisitor visitor = new AstVariableRenamingVisitor(objectName, newObjectName);
         visitor.visit(methodNode);
     }
 

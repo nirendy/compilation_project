@@ -1,4 +1,3 @@
-import ast.AstVariableRenameVisitor;
 import ast.FormalArg;
 import ast.MethodDecl;
 import ast.Program;
@@ -12,6 +11,7 @@ public class FormalVariableRenaming extends Renaming {
         super(program, classOfRenamedObject, methodOfRenamedObject, variableName, newVariableName);
     }
 
+    @Override
     public void rename() {
         ArrayList<String> classesToRename = utils.getAffectedClassesOfMethodModifying(classOfRenamedObject,
                 methodOfRenamedObject);
@@ -26,7 +26,7 @@ public class FormalVariableRenaming extends Renaming {
                  renameFormalVariableOfMethod(methodNode);
 
                  /* Renaming all the occurrences of the variable in the method */
-                 new AstVariableRenameVisitor(objectName, newObjectName).visit(methodNode);
+                 new AstVariableRenamingVisitor(objectName, newObjectName).visit(methodNode);
              }
         }
     }
