@@ -1,4 +1,3 @@
-import ast.AstLineNumberVisitor;
 import ast.Program;
 import ast.RenamingType;
 
@@ -28,8 +27,11 @@ public class RenamingFactory {
                     originalName, newName);
         }
 
-        if (renamingClass != null) {
-            renamingClass.rename();
+        else if (renamedObject == RenamingType.FIELD) {
+            renamingClass = new FieldRenaming(program, classOfRenamedObject, originalName, newName);
         }
+
+        assert (renamingClass != null);
+        renamingClass.rename();
     }
 }

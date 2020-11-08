@@ -1,4 +1,4 @@
-package ast;
+import ast.*;
 
 public class AstLineNumberVisitor implements Visitor {
 

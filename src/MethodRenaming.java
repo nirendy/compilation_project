@@ -3,6 +3,7 @@ import ast.MethodDecl;
 import ast.Program;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class MethodRenaming extends Renaming {
 
@@ -10,9 +11,13 @@ public class MethodRenaming extends Renaming {
         super(program, className, null, methodName, newMethodName);
     }
 
+    @Override
     public void rename() {
         ArrayList<String> affectedClasses = utils.getAffectedClassesOfMethodModifying(classOfRenamedObject, objectName);
         renameMethodDeclarations(affectedClasses);
+
+        HashMap<String, HashMap<String, String>> typesOfFieldsByClass = utils.getTypesOfFieldsByClass();
+        new AstMethodRenamingVisitor(typesOfFieldsByClass, affectedClasses, objectName, newObjectName).visit(program);
     }
 
     public void renameMethodDeclarations(ArrayList<String> classesNames) {
