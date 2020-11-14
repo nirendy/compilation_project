@@ -16,21 +16,29 @@
     <classdecls>
         <classdecl>
             <name>Shared</name>
-            <fields/>
+            <fields>
+                <field>
+                    <lineNumber>10</lineNumber>
+                    <type>
+                        <int/>
+                    </type>
+                    <name>renamedVar</name>
+                </field>
+            </fields>
             <methoddecls>
                 <methoddecl>
-                    <lineNumber>11</lineNumber>
+                    <lineNumber>13</lineNumber>
                     <returnType>
                         <int/>
                     </returnType>
-                    <name>renamedMethod</name>
+                    <name>foo</name>
                     <formals/>
                     <vardecls/>
                     <body/>
                     <ret>
-                        <int-literal>
-                            <num>1</num>
-                        </int-literal>
+                        <ref-id>
+                            <id>renamedVar</id>
+                        </ref-id>
                     </ret>
                 </methoddecl>
             </methoddecls>
@@ -47,18 +55,18 @@
             <fields/>
             <methoddecls>
                 <methoddecl>
-                    <lineNumber>19</lineNumber>
+                    <lineNumber>21</lineNumber>
                     <returnType>
                         <int/>
                     </returnType>
-                    <name>renamedMethod</name>
+                    <name>foo</name>
                     <formals/>
                     <vardecls/>
                     <body/>
                     <ret>
-                        <int-literal>
-                            <num>2</num>
-                        </int-literal>
+                        <ref-id>
+                            <id>renamedVar</id>
+                        </ref-id>
                     </ret>
                 </methoddecl>
             </methoddecls>
@@ -69,18 +77,18 @@
             <fields/>
             <methoddecls>
                 <methoddecl>
-                    <lineNumber>25</lineNumber>
+                    <lineNumber>27</lineNumber>
                     <returnType>
                         <int/>
                     </returnType>
-                    <name>renamedMethod</name>
+                    <name>foo</name>
                     <formals/>
                     <vardecls/>
                     <body/>
                     <ret>
-                        <int-literal>
-                            <num>3</num>
-                        </int-literal>
+                        <ref-id>
+                            <id>renamedVar</id>
+                        </ref-id>
                     </ret>
                 </methoddecl>
             </methoddecls>

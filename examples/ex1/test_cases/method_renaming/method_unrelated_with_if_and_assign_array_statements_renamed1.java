@@ -7,13 +7,13 @@ class Main {
 class A {}
 
 class B extends A {
-    public int theMethod() {
+    public int renamedMethod() {
         return 1;
     }
 }
 
 class C extends A {
-    public int renamedMethod() {
+    public int theMethod() {
         return 1;
     }
 }

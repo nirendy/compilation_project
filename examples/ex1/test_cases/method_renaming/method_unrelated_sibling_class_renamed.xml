@@ -26,7 +26,9 @@
             <methoddecls>
                 <methoddecl>
                     <lineNumber>13</lineNumber>
-                    <returnType><int/></returnType>
+                    <returnType>
+                        <int/>
+                    </returnType>
                     <name>theMethod</name>
                     <formals/>
                     <vardecls/>
@@ -46,7 +48,9 @@
             <methoddecls>
                 <methoddecl>
                     <lineNumber>19</lineNumber>
-                    <returnType><int/></returnType>
+                    <returnType>
+                        <int/>
+                    </returnType>
                     <name>renamedMethod</name>
                     <formals/>
                     <vardecls/>
