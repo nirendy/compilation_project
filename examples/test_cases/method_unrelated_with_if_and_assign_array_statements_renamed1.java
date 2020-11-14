@@ -13,7 +13,7 @@ class B extends A {
 }
 
 class C extends A {
-    public int theMethod() {
+    public int renamedMethod() {
         return 1;
     }
 }
@@ -22,12 +22,12 @@ class D extends C {
     public int[] anotherMethod(B b) {
         int[] max;
 
-        max = new int[this.theMethod() * b.theMethod()]
+        max = new int[this.theMethod() * b.renamedMethod()]
 
-        if (b.theMethod() < this.theMethod()) {
-            max[b.theMethod()] = this.theMethod();
+        if (b.renamedMethod() < this.theMethod()) {
+            max[b.renamedMethod()] = this.theMethod();
         } else {
-            max[this.theMethod()] = b.theMethod();
+            max[this.theMethod()] = b.renamedMethod();
         }
 
         return max;

@@ -13,7 +13,7 @@ class B extends A {
 }
 
 class C extends A {
-    public int theMethod() {
+    public int renamedMethod() {
         return 1;
     }
 }
@@ -22,8 +22,8 @@ class D extends C {
     public int anotherMethod(B b) {
         int max;
 
-        while (b.theMethod() < this.theMethod()) {
-            max = this.theMethod() + b.theMethod()
+        while (b.theMethod() < this.renamedMethod()) {
+            max = this.renamedMethod() + b.theMethod()
         }
 
         return max;

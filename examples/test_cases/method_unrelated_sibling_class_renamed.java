@@ -4,22 +4,16 @@ class Main {
     }
 }
 
-class Shared {
-    public int renamedMethod() {
-        return 1;
-    }
-}
-
-class A extends Shared { }
+class A {}
 
 class B extends A {
-    public int renamedMethod() {
-        return 2;
+    public int theMethod() {
+        return 1;
     }
 }
 
 class C extends A {
     public int renamedMethod() {
-        return 3;
+        return 1;
     }
 }
