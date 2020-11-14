@@ -25,7 +25,7 @@ class D extends C {
         while (b.theMethod() < this.theMethod()) {
             max = this.theMethod() + b.theMethod()
         }
-        return 1;
 
+        return max;
     }
 }

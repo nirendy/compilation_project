@@ -19,17 +19,17 @@ class C extends A {
 }
 
 class D extends C {
-    public int anotherMethod(B b) {
-        int max[];
+    public int[] anotherMethod(B b) {
+        int[] max;
 
         max = new int[this.theMethod() * b.theMethod()]
 
-        if (this.theMethod() > b.theMethod()) {
+        if (b.theMethod() < this.theMethod()) {
             max[b.theMethod()] = this.theMethod();
         } else {
-            max[theMethod()] = b.theMethod();
+            max[this.theMethod()] = b.theMethod();
         }
 
-        return 1;
+        return max;
     }
 }
