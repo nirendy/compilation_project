@@ -14,20 +14,19 @@ public class LocalVariableRenaming extends Renaming {
         MethodDecl methodNode = utils.getMethodNode(classOfRenamedObject, methodOfRenamedObject);
 
         /* Renaming the variable in its declaration */
-        VarDecl varDecl = getVariableDeclaration(methodNode, objectName);
-        varDecl.setName(newObjectName);
+        renameLocalVariableOfMethod(methodNode);
 
         /* Renaming all the occurrences of the variable in the method */
         AstVariableRenamingVisitor visitor = new AstVariableRenamingVisitor(objectName, newObjectName);
         visitor.visit(methodNode);
     }
 
-    public VarDecl getVariableDeclaration(MethodDecl methodNode, String varName) {
+    private void renameLocalVariableOfMethod(MethodDecl methodNode) {
         for (VarDecl varDecl : methodNode.vardecls()) {
-            if (varDecl.name().equals(varName)) {
-                return varDecl;
+            if (varDecl.name().equals(objectName)) {
+                varDecl.setName(newObjectName);
+                return;
             }
         }
-        return null;
     }
 }
