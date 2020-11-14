@@ -10,22 +10,20 @@ class B extends A {
     public int theMethod() {
         return 1;
     }
+
+    public int anotherMethod() {
+        return this.theMethod()
+    }
 }
 
 class C extends A {
-    public int theMethod() {
+    public int renamedMethod() {
         return 1;
     }
 }
 
 class D extends C {
-    public int anotherMethod(B b) {
-        int max;
-
-        while (b.theMethod() < this.theMethod()) {
-            max = this.theMethod() + b.theMethod()
-        }
-
-        return max;
+    public int anotherMethod() {
+        return this.renamedMethod()
     }
 }

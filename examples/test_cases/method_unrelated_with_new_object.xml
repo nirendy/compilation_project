@@ -59,5 +59,51 @@
                 </methoddecl>
             </methoddecls>
         </classdecl>
+        <classdecl>
+            <name>D</name>
+            <superName>C</superName>
+            <fields/>
+            <methoddecls/>
+        </classdecl>
+        <classdecl>
+            <name>E</name>
+            <fields/>
+            <methoddecls>
+                <methoddecl>
+                    <lineNumber>27</lineNumber>
+                    <returnType><int/></returnType>
+                    <name>anotherMethod</name>
+                    <formals/>
+                    <vardecls/>
+                    <body/>
+                    <ret>
+                        <add>
+                            <e1>
+                                <call>
+                                    <ownerExpr>
+                                        <new-object>
+                                            <classId>B</classId>
+                                        </new-object>
+                                    </ownerExpr>
+                                    <methodId>theMethod</methodId>
+                                    <actuals/>
+                                </call>
+                            </e1>
+                            <e2>
+                                <call>
+                                    <ownerExpr>
+                                        <new-object>
+                                            <classId>D</classId>
+                                        </new-object>
+                                    </ownerExpr>
+                                    <methodId>theMethod</methodId>
+                                    <actuals/>
+                                </call>
+                            </e2>
+                        </add>
+                    </ret>
+                </methoddecl>
+            </methoddecls>
+        </classdecl>
     </classdecls>
 </program>

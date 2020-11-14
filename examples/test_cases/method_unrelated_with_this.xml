@@ -25,7 +25,44 @@
             <fields/>
             <methoddecls>
                 <methoddecl>
-                    <lineNumber>13</lineNumber>
+                    <lineNumber>14</lineNumber>
+                    <returnType><int/></returnType>
+                    <name>theMethod</name>
+                    <formals/>
+                    <vardecls/>
+                    <body/>
+                    <ret>
+                        <int-literal>
+                            <num>1</num>
+                        </int-literal>
+                    </ret>
+                </methoddecl>
+                <methoddecl>
+                    <lineNumber>17</lineNumber>
+                    <returnType><int/></returnType>
+                    <name>anotherMethod</name>
+                    <formals/>
+                    <vardecls/>
+                    <body/>
+                    <ret>
+                        <call>
+                            <ownerExpr>
+                                <this/>
+                            </ownerExpr>
+                            <methodId>theMethod</methodId>
+                            <actuals/>
+                        </call>
+                    </ret>
+                </methoddecl>
+            </methoddecls>
+        </classdecl>
+        <classdecl>
+            <name>C</name>
+            <superName>A</superName>
+            <fields/>
+            <methoddecls>
+                <methoddecl>
+                    <lineNumber>23</lineNumber>
                     <returnType><int/></returnType>
                     <name>theMethod</name>
                     <formals/>
@@ -40,21 +77,25 @@
             </methoddecls>
         </classdecl>
         <classdecl>
-            <name>C</name>
-            <superName>A</superName>
+            <name>D</name>
+            <superName>C</superName>
             <fields/>
             <methoddecls>
                 <methoddecl>
-                    <lineNumber>19</lineNumber>
+                    <lineNumber>29</lineNumber>
                     <returnType><int/></returnType>
-                    <name>theMethod</name>
+                    <name>anotherMethod</name>
                     <formals/>
                     <vardecls/>
                     <body/>
                     <ret>
-                        <int-literal>
-                            <num>1</num>
-                        </int-literal>
+                        <call>
+                            <ownerExpr>
+                                <this/>
+                            </ownerExpr>
+                            <methodId>theMethod</methodId>
+                            <actuals/>
+                        </call>
                     </ret>
                 </methoddecl>
             </methoddecls>

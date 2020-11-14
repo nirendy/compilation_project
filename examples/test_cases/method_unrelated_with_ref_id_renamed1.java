@@ -13,19 +13,18 @@ class B extends A {
 }
 
 class C extends A {
-    public int theMethod() {
+    public int renamedMethod() {
         return 1;
     }
 }
 
-class D extends C {
+class D extends C {}
+
+class E {
+    D d;
+
     public int anotherMethod(B b) {
-        int max;
-
-        while (b.theMethod() < this.theMethod()) {
-            max = this.theMethod() + b.theMethod()
-        }
-
-        return max;
+        d = new D();
+        return b.theMethod() + d.renamedMethod()
     }
 }

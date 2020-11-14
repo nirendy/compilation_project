@@ -15,11 +15,17 @@
     </mainclass>
     <classdecls>
         <classdecl>
-            <name>Shared</name>
+            <name>A</name>
+            <fields/>
+            <methoddecls/>
+        </classdecl>
+        <classdecl>
+            <name>B</name>
+            <superName>A</superName>
             <fields/>
             <methoddecls>
                 <methoddecl>
-                    <lineNumber>11</lineNumber>
+                    <lineNumber>13</lineNumber>
                     <returnType><int/></returnType>
                     <name>theMethod</name>
                     <formals/>
@@ -34,47 +40,67 @@
             </methoddecls>
         </classdecl>
         <classdecl>
-            <name>A</name>
-            <superName>Shared</superName>
-            <fields/>
-            <methoddecls/>
-        </classdecl>
-        <classdecl>
-            <name>B</name>
+            <name>C</name>
             <superName>A</superName>
             <fields/>
             <methoddecls>
                 <methoddecl>
                     <lineNumber>19</lineNumber>
                     <returnType><int/></returnType>
-                    <name>theMethod</name>
+                    <name>renamedMethod</name>
                     <formals/>
                     <vardecls/>
                     <body/>
                     <ret>
                         <int-literal>
-                            <num>2</num>
+                            <num>1</num>
                         </int-literal>
                     </ret>
                 </methoddecl>
             </methoddecls>
         </classdecl>
         <classdecl>
-            <name>C</name>
-            <superName>A</superName>
+            <name>D</name>
+            <superName>C</superName>
+            <fields/>
+            <methoddecls/>
+        </classdecl>
+        <classdecl>
+            <name>E</name>
             <fields/>
             <methoddecls>
                 <methoddecl>
-                    <lineNumber>25</lineNumber>
+                    <lineNumber>27</lineNumber>
                     <returnType><int/></returnType>
-                    <name>theMethod</name>
+                    <name>anotherMethod</name>
                     <formals/>
                     <vardecls/>
                     <body/>
                     <ret>
-                        <int-literal>
-                            <num>3</num>
-                        </int-literal>
+                        <add>
+                            <e1>
+                                <call>
+                                    <ownerExpr>
+                                        <new-object>
+                                            <classId>B</classId>
+                                        </new-object>
+                                    </ownerExpr>
+                                    <methodId>theMethod</methodId>
+                                    <actuals/>
+                                </call>
+                            </e1>
+                            <e2>
+                                <call>
+                                    <ownerExpr>
+                                        <new-object>
+                                            <classId>D</classId>
+                                        </new-object>
+                                    </ownerExpr>
+                                    <methodId>renamedMethod</methodId>
+                                    <actuals/>
+                                </call>
+                            </e2>
+                        </add>
                     </ret>
                 </methoddecl>
             </methoddecls>
