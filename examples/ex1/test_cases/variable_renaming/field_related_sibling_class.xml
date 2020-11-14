@@ -28,7 +28,9 @@
             <methoddecls>
                 <methoddecl>
                     <lineNumber>13</lineNumber>
-                    <returnType><int/></returnType>
+                    <returnType>
+                        <int/>
+                    </returnType>
                     <name>foo</name>
                     <formals/>
                     <vardecls/>
@@ -54,7 +56,9 @@
             <methoddecls>
                 <methoddecl>
                     <lineNumber>21</lineNumber>
-                    <returnType><int/></returnType>
+                    <returnType>
+                        <int/>
+                    </returnType>
                     <name>foo</name>
                     <formals/>
                     <vardecls/>
@@ -74,7 +78,9 @@
             <methoddecls>
                 <methoddecl>
                     <lineNumber>27</lineNumber>
-                    <returnType><int/></returnType>
+                    <returnType>
+                        <int/>
+                    </returnType>
                     <name>foo</name>
                     <formals/>
                     <vardecls/>

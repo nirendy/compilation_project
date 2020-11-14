@@ -34,7 +34,9 @@
             <methoddecls>
                 <methoddecl>
                     <lineNumber>15</lineNumber>
-                    <returnType><int/></returnType>
+                    <returnType>
+                        <int/>
+                    </returnType>
                     <name>foo</name>
                     <formals/>
                     <vardecls/>
@@ -62,7 +64,9 @@
             <methoddecls>
                 <methoddecl>
                     <lineNumber>23</lineNumber>
-                    <returnType><int/></returnType>
+                    <returnType>
+                        <int/>
+                    </returnType>
                     <name>foo</name>
                     <formals/>
                     <vardecls/>
