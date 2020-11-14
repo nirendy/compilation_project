@@ -23,7 +23,18 @@ class C extends A {
 }
 
 class D extends C {
-    public int bar(int theVar, int anotherVar) {
-        return theVar + anotherVar;
+    public int bar(int anotherVar) {
+        int[] max;
+
+        max = new int[theVar * anotherVar]
+
+        if (anotherVar < theVar) {
+            max[anotherVar] = theVar;
+        } else {
+            max[theVar] = anotherVar;
+        }
+
+        return max[theVar * anotherVar];
     }
+
 }

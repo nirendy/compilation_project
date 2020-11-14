@@ -23,7 +23,15 @@ class C extends A {
 }
 
 class D extends C {
-    public int bar(int theVar, int anotherVar) {
-        return theVar + anotherVar;
+    public int bar(int anotherVar) {
+        int max;
+
+        while (!(anotherVar && theVar)) {
+            theVar = theVar + anotherVar;
+            max = 2 * theVar
+        }
+
+        return max[theVar - anotherVar];
     }
+
 }
