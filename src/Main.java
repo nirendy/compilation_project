@@ -53,7 +53,7 @@ public class Main {
                         throw new IllegalArgumentException("unknown rename type " + type);
                     }
 
-                    RenamingFactory.rename(prog, originalName, newName, Integer.parseInt(originalLine));
+                    RenamingFactory.rename(prog, originalName, newName, Integer.parseInt(originalLine), isMethod);
                     new AstXMLSerializer().serialize(prog, outfilename);
 
 //                    AstPrintVisitor astPrinter = new AstPrintVisitor();
