@@ -4,15 +4,17 @@ public class AstLineNumberVisitor implements Visitor {
 
     String originalName;
     int lineNumber;
+    boolean isMethod;
 
     public RenamingType renamedObject;
 
     private String currentClass;
     private String currentMethod;
 
-    public AstLineNumberVisitor(String originalName, int lineNumber) {
+    public AstLineNumberVisitor(String originalName, int lineNumber, boolean isMethod) {
         this.originalName = originalName;
         this.lineNumber = lineNumber;
+        this.isMethod = isMethod;
     }
 
     public String getClassOfRenamedObject() {
@@ -44,14 +46,14 @@ public class AstLineNumberVisitor implements Visitor {
         currentClass = classDecl.name();
 
         for (var fieldDecl : classDecl.fields()) {
-            if (fieldDecl.lineNumber == lineNumber && fieldDecl.name().equals(originalName)) {
+            if (!isMethod && fieldDecl.lineNumber == lineNumber && fieldDecl.name().equals(originalName)) {
                 renamedObject = RenamingType.FIELD;
                 return;
             }
 
         }
         for (var methodDecl : classDecl.methoddecls()) {
-            if (methodDecl.lineNumber == lineNumber && methodDecl.name().equals(originalName)) {
+            if (isMethod && methodDecl.lineNumber == lineNumber && methodDecl.name().equals(originalName)) {
                 renamedObject = RenamingType.METHOD;
                 return;
             }
@@ -76,14 +78,14 @@ public class AstLineNumberVisitor implements Visitor {
         currentMethod = methodDecl.name();
 
         for (var formal : methodDecl.formals()) {
-            if (formal.lineNumber == lineNumber && formal.name().equals(originalName)) {
+            if (!isMethod && formal.lineNumber == lineNumber && formal.name().equals(originalName)) {
                 renamedObject = RenamingType.FORMAL_VARIABLE;
                 return;
             }
         }
 
         for (var varDecl : methodDecl.vardecls()) {
-            if (varDecl.lineNumber == lineNumber && varDecl.name().equals(originalName)) {
+            if (!isMethod && varDecl.lineNumber == lineNumber && varDecl.name().equals(originalName)) {
                 renamedObject = RenamingType.LOCAL_VARIABLE;
                 return;
             }
