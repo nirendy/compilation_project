@@ -71,7 +71,7 @@
                 <methoddecl>
                     <lineNumber>35</lineNumber>
                     <returnType>
-                        <int-array/>
+                        <int/>
                     </returnType>
                     <name>anotherMethod</name>
                     <formals>
@@ -204,9 +204,37 @@
                         </if>
                     </body>
                     <ret>
-                        <ref-id>
-                            <id>max</id>
-                        </ref-id>
+                        <array-access>
+                            <arrayExpr>
+                                <ref-id>
+                                    <id>max</id>
+                                </ref-id>
+                            </arrayExpr>
+                            <indexExpr>
+                                <mult>
+                                    <e1>
+                                        <call>
+                                            <ownerExpr>
+                                                <this/>
+                                            </ownerExpr>
+                                            <methodId>theMethod</methodId>
+                                            <actuals/>
+                                        </call>
+                                    </e1>
+                                    <e2>
+                                        <call>
+                                            <ownerExpr>
+                                                <ref-id>
+                                                    <id>b</id>
+                                                </ref-id>
+                                            </ownerExpr>
+                                            <methodId>renamedMethod</methodId>
+                                            <actuals/>
+                                        </call>
+                                    </e2>
+                                </mult>
+                            </indexExpr>
+                        </array-access>
                     </ret>
                 </methoddecl>
             </methoddecls>

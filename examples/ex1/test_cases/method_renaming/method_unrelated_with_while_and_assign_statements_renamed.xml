@@ -97,28 +97,32 @@
                     <body>
                         <while>
                             <cond>
-                                <lt>
-                                    <e1>
-                                        <call>
-                                            <ownerExpr>
-                                                <ref-id>
-                                                    <id>b</id>
-                                                </ref-id>
-                                            </ownerExpr>
-                                            <methodId>theMethod</methodId>
-                                            <actuals/>
-                                        </call>
-                                    </e1>
-                                    <e2>
-                                        <call>
-                                            <ownerExpr>
-                                                <this/>
-                                            </ownerExpr>
-                                            <methodId>renamedMethod</methodId>
-                                            <actuals/>
-                                        </call>
-                                    </e2>
-                                </lt>
+                                <not>
+                                    <e>
+                                        <and>
+                                            <e1>
+                                                <call>
+                                                    <ownerExpr>
+                                                        <ref-id>
+                                                            <id>b</id>
+                                                        </ref-id>
+                                                    </ownerExpr>
+                                                    <methodId>theMethod</methodId>
+                                                    <actuals/>
+                                                </call>
+                                            </e1>
+                                            <e2>
+                                                <call>
+                                                    <ownerExpr>
+                                                        <this/>
+                                                    </ownerExpr>
+                                                    <methodId>renamedMethod</methodId>
+                                                    <actuals/>
+                                                </call>
+                                            </e2>
+                                        </and>
+                                    </e>
+                                </not>
                             </cond>
                             <body>
                                 <assign>

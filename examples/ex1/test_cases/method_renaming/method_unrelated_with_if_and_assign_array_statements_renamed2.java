@@ -30,6 +30,6 @@ class D extends C {
             max[this.renamedMethod()] = b.theMethod();
         }
 
-        return max;
+        return max[this.renamedMethod() * b.theMethod()]
     }
 }

@@ -22,7 +22,7 @@ class D extends C {
     public int anotherMethod(B b) {
         int max;
 
-        while (b.theMethod() < this.theMethod()) {
+        while (!(b.theMethod() && this.theMethod())) {
             max = this.theMethod() + b.theMethod()
         }
 
