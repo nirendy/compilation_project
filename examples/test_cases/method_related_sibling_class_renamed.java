@@ -5,7 +5,7 @@ class Main {
 }
 
 class Shared {
-    public int renamedMethod() {
+    public int theMethod() {
         return 1;
     }
 }
@@ -13,13 +13,13 @@ class Shared {
 class A extends Shared { }
 
 class B extends A {
-    public int renamedMethod() {
+    public int theMethod() {
         return 2;
     }
 }
 
 class C extends A {
-    public int renamedMethod() {
+    public int theMethod() {
         return 3;
     }
 }
