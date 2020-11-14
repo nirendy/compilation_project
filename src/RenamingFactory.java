@@ -3,8 +3,8 @@ import ast.RenamingType;
 
 public class RenamingFactory {
 
-    public static void rename(Program program, String originalName, String newName, int lineNumber) {
-        AstLineNumberVisitor lineNumberVisitor = new AstLineNumberVisitor(originalName, lineNumber);
+    public static void rename(Program program, String originalName, String newName, int lineNumber, boolean isMethod) {
+        AstLineNumberVisitor lineNumberVisitor = new AstLineNumberVisitor(originalName, lineNumber, isMethod);
         lineNumberVisitor.visit(program);
 
         RenamingType renamedObject = lineNumberVisitor.renamedObject;
