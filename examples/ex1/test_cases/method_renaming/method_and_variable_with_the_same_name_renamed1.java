@@ -7,7 +7,7 @@ class Main {
 class Shared {
     int theThing;
 
-    public int theThing() {
+    public int renamedThing() {
         return theThing;
     }
 }
@@ -15,19 +15,19 @@ class Shared {
 class A extends Shared { }
 
 class B extends A {
-    public int theThing() {
+    public int renamedThing() {
         return theThing;
     }
 }
 
 class C extends A {
-    public int theThing() {
+    public int renamedThing() {
         return theThing;
     }
 }
 
 class D extends A {
-    public int theThing() {
+    public int renamedThing() {
         int theThing;
 
         return theThing;
@@ -35,7 +35,7 @@ class D extends A {
 }
 
 class E extends A {
-    public int theThing(int renamedThing) {
-        return renamedThing;
+    public int renamedThing(int theThing) {
+        return theThing;
     }
 }

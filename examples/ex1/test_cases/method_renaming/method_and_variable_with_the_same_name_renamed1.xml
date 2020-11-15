@@ -31,7 +31,7 @@
                     <returnType>
                         <int/>
                     </returnType>
-                    <name>theThing</name>
+                    <name>renamedThing</name>
                     <formals/>
                     <vardecls/>
                     <body/>
@@ -59,7 +59,7 @@
                     <returnType>
                         <int/>
                     </returnType>
-                    <name>theThing</name>
+                    <name>renamedThing</name>
                     <formals/>
                     <vardecls/>
                     <body/>
@@ -81,7 +81,7 @@
                     <returnType>
                         <int/>
                     </returnType>
-                    <name>theThing</name>
+                    <name>renamedThing</name>
                     <formals/>
                     <vardecls/>
                     <body/>
@@ -103,7 +103,7 @@
                     <returnType>
                         <int/>
                     </returnType>
-                    <name>theThing</name>
+                    <name>renamedThing</name>
                     <formals/>
                     <vardecls>
                         <vardecl>
@@ -133,7 +133,7 @@
                     <returnType>
                         <int/>
                     </returnType>
-                    <name>theThing</name>
+                    <name>renamedThing</name>
                     <formals>
                         <formal>
                             <lineNumber>38</lineNumber>

@@ -5,10 +5,10 @@ class Main {
 }
 
 class Shared {
-    int renamedThing;
+    int theThing;
 
     public int theThing() {
-        return renamedThing;
+        return theThing;
     }
 }
 
@@ -16,21 +16,21 @@ class A extends Shared { }
 
 class B extends A {
     public int theThing() {
-        return renamedThing;
+        return theThing;
     }
 }
 
 class C extends A {
     public int theThing() {
-        return renamedThing;
+        return theThing;
     }
 }
 
 class D extends A {
     public int theThing() {
-        int theThing;
+        int renamedThing;
 
-        return theThing;
+        return renamedThing;
     }
 }
 
