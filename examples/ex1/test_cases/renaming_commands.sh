@@ -1,11 +1,3 @@
-#!/bin/bash
-
-mkdir -p temp_out
-mkdir -p temp_expected
-mkdir -p temp_actual
-
-echo "Running renaming logic..."
-
 java -jar mjavac.jar unmarshal rename method theMethod 25 renamedMethod  examples/ex1/test_cases/method_renaming/method_related_sibling_class.xml temp_out/method_related_sibling_class_renamed.xml
 java -jar mjavac.jar unmarshal rename method theMethod 19 renamedMethod  examples/ex1/test_cases/method_renaming/method_unrelated_sibling_class.xml temp_out/method_unrelated_sibling_class_renamed.xml
 java -jar mjavac.jar unmarshal rename method theMethod 13 renamedMethod  examples/ex1/test_cases/method_renaming/method_with_if_and_assign_array_statements.xml temp_out/method_with_if_and_assign_array_statements_renamed1.xml
@@ -33,31 +25,4 @@ java -jar mjavac.jar unmarshal rename var theVar 28 renamedVar examples/ex1/test
 java -jar mjavac.jar unmarshal rename var theThing 10 renamedThing examples/ex1/test_cases/variable_renaming/variable_and_method_with_the_same_name.xml  temp_out/variable_and_method_with_the_same_name_renamed1.xml
 java -jar mjavac.jar unmarshal rename var theThing 33 renamedThing examples/ex1/test_cases/variable_renaming/variable_and_method_with_the_same_name.xml  temp_out/variable_and_method_with_the_same_name_renamed2.xml
 java -jar mjavac.jar unmarshal rename var theThing 38 renamedThing examples/ex1/test_cases/variable_renaming/variable_and_method_with_the_same_name.xml  temp_out/variable_and_method_with_the_same_name_renamed3.xml
-
-
-printf "\n\nChecking method renaming results against expected:\n"
-echo "---------------------------------"
-for path in $(ls examples/ex1/test_cases/method_renaming/*_renamed*.xml); do
-	echo "Checking $(basename $path)..."
-	cat $path | sed -E -e 's/[[:blank:]]+//g' > temp_expected/$(basename $path)
-	cat temp_out/$(basename $path) | sed -E -e 's/[[:blank:]]+//g' > temp_actual/$(basename $path)
-	diff temp_expected/$(basename $path) temp_actual/$(basename $path)
-	echo "================================="
-done
-
-printf "\n\nChecking variable renaming results against expected:\n"
-echo "---------------------------------"
-for path in $(ls examples/ex1/test_cases/variable_renaming/*_renamed*.xml); do
-	echo "Checking $(basename $path)..."
-	cat $path | sed -E -e 's/[[:blank:]]+//g' > temp_expected/$(basename $path)
-	cat temp_out/$(basename $path) | sed -E -e 's/[[:blank:]]+//g' > temp_actual/$(basename $path)
-	diff temp_expected/$(basename $path) temp_actual/$(basename $path)
-	echo "================================="
-done
-
-printf "\n\nFinishing up...  "
-rm -rf temp_out
-rm -rf temp_expected
-rm -rf temp_actual
-echo "Done!"
 
