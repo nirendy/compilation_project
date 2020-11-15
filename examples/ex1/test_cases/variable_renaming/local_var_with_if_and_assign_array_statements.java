@@ -24,13 +24,17 @@ class C extends A {
 
 class D extends C {
     public int bar(int anotherVar) {
-        int max;
+        int[] max;
+        int theVar;
 
-        while (!(anotherVar && theVar)) {
-            theVar = theVar + anotherVar;
-            max = 2 * theVar;
+        max = new int[theVar * anotherVar]
+
+        if (anotherVar < theVar) {
+            max[anotherVar] = theVar;
+        } else {
+            max[theVar] = anotherVar;
         }
 
-        return max;
+        return max[theVar * anotherVar];
     }
 }

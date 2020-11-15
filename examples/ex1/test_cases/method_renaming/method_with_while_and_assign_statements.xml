@@ -125,33 +125,37 @@
                                 </not>
                             </cond>
                             <body>
-                                <assign>
-                                    <lv>max</lv>
-                                    <rv>
-                                        <add>
-                                            <e1>
-                                                <call>
-                                                    <ownerExpr>
-                                                        <this/>
-                                                    </ownerExpr>
-                                                    <methodId>theMethod</methodId>
-                                                    <actuals/>
-                                                </call>
-                                            </e1>
-                                            <e2>
-                                                <call>
-                                                    <ownerExpr>
-                                                        <ref-id>
-                                                            <id>b</id>
-                                                        </ref-id>
-                                                    </ownerExpr>
-                                                    <methodId>theMethod</methodId>
-                                                    <actuals/>
-                                                </call>
-                                            </e2>
-                                        </add>
-                                    </rv>
-                                </assign>
+                                <block>
+                                    <statements>
+                                        <assign>
+                                            <lv>max</lv>
+                                            <rv>
+                                                <add>
+                                                    <e1>
+                                                        <call>
+                                                            <ownerExpr>
+                                                                <this/>
+                                                            </ownerExpr>
+                                                            <methodId>theMethod</methodId>
+                                                            <actuals/>
+                                                        </call>
+                                                    </e1>
+                                                    <e2>
+                                                        <call>
+                                                            <ownerExpr>
+                                                                <ref-id>
+                                                                    <id>b</id>
+                                                                </ref-id>
+                                                            </ownerExpr>
+                                                            <methodId>theMethod</methodId>
+                                                            <actuals/>
+                                                        </call>
+                                                    </e2>
+                                                </add>
+                                            </rv>
+                                        </assign>
+                                    </statements>
+                                </block>
                             </body>
                         </while>
                     </body>

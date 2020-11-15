@@ -7,30 +7,27 @@ class Main {
 class A { }
 
 class B extends A {
-    int theVar;
+    int[] theVar;
 
     public int foo() {
-        return theVar;
+        return theVar.length;
     }
 }
 
 class C extends A {
-    int theVar;
+    int[] theVar;
 
     public int foo() {
-        return theVar;
+        return theVar.length;
     }
 }
 
 class D extends C {
     public int bar(int anotherVar) {
-        int max;
+        int theVar;
 
-        while (!(anotherVar && theVar)) {
-            theVar = theVar + anotherVar;
-            max = 2 * theVar;
-        }
-
-        return max;
+        System.out.println(theVar[theVar.length] - anotherVar);
+        return theVar.length - anotherVar;
     }
+
 }

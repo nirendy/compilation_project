@@ -23,7 +23,8 @@ class D extends C {
         int max;
 
         while (!(b.theMethod() && this.theMethod())) {
-            max = this.theMethod() + b.theMethod()
+            max = this.theMethod() + b.theMethod();
+
         }
 
         return max;
