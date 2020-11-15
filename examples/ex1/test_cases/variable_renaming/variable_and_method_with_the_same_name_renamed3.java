@@ -28,14 +28,14 @@ class C extends A {
 
 class D extends A {
     public int theThing() {
-        int renamedThing;
+        int theThing;
 
-        return renamedThing;
+        return theThing;
     }
 }
 
 class E extends A {
-    public int theThing(int theThing) {
-        return theThing;
+    public int theThing(int renamedThing) {
+        return renamedThing;
     }
 }

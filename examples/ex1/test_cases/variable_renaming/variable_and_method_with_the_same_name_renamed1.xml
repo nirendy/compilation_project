@@ -22,7 +22,7 @@
                     <type>
                         <int/>
                     </type>
-                    <name>theThing</name>
+                    <name>renamedThing</name>
                 </field>
             </fields>
             <methoddecls>
@@ -31,13 +31,13 @@
                     <returnType>
                         <int/>
                     </returnType>
-                    <name>renamedThing</name>
+                    <name>theThing</name>
                     <formals/>
                     <vardecls/>
                     <body/>
                     <ret>
                         <ref-id>
-                            <id>theThing</id>
+                            <id>renamedThing</id>
                         </ref-id>
                     </ret>
                 </methoddecl>
@@ -59,13 +59,13 @@
                     <returnType>
                         <int/>
                     </returnType>
-                    <name>renamedThing</name>
+                    <name>theThing</name>
                     <formals/>
                     <vardecls/>
                     <body/>
                     <ret>
                         <ref-id>
-                            <id>theThing</id>
+                            <id>renamedThing</id>
                         </ref-id>
                     </ret>
                 </methoddecl>
@@ -81,13 +81,13 @@
                     <returnType>
                         <int/>
                     </returnType>
-                    <name>renamedThing</name>
+                    <name>theThing</name>
                     <formals/>
                     <vardecls/>
                     <body/>
                     <ret>
                         <ref-id>
-                            <id>theThing</id>
+                            <id>renamedThing</id>
                         </ref-id>
                     </ret>
                 </methoddecl>
@@ -103,7 +103,7 @@
                     <returnType>
                         <int/>
                     </returnType>
-                    <name>renamedThing</name>
+                    <name>theThing</name>
                     <formals/>
                     <vardecls>
                         <vardecl>
@@ -133,10 +133,10 @@
                     <returnType>
                         <int/>
                     </returnType>
-                    <name>renamedThing</name>
+                    <name>theThing</name>
                     <formals>
                         <formal>
-                            <lineNumber>33</lineNumber>
+                            <lineNumber>38</lineNumber>
                             <type>
                                 <int/>
                             </type>

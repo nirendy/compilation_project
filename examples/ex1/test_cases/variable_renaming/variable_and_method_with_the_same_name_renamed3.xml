@@ -111,13 +111,13 @@
                             <type>
                                 <int/>
                             </type>
-                            <name>renamedThing</name>
+                            <name>theThing</name>
                         </vardecl>
                     </vardecls>
                     <body/>
                     <ret>
                         <ref-id>
-                            <id>renamedThing</id>
+                            <id>theThing</id>
                         </ref-id>
                     </ret>
                 </methoddecl>
@@ -136,18 +136,18 @@
                     <name>theThing</name>
                     <formals>
                         <formal>
-                            <lineNumber>33</lineNumber>
+                            <lineNumber>38</lineNumber>
                             <type>
                                 <int/>
                             </type>
-                            <name>theThing</name>
+                            <name>renamedThing</name>
                         </formal>
                     </formals>
                     <vardecls/>
                     <body/>
                     <ret>
                         <ref-id>
-                            <id>theThing</id>
+                            <id>renamedThing</id>
                         </ref-id>
                     </ret>
                 </methoddecl>
