@@ -22,21 +22,29 @@
         <classdecl>
             <name>B</name>
             <superName>A</superName>
-            <fields/>
+            <fields>
+                <field>
+                    <lineNumber>12</lineNumber>
+                    <type>
+                        <int/>
+                    </type>
+                    <name>theVar</name>
+                </field>
+            </fields>
             <methoddecls>
                 <methoddecl>
-                    <lineNumber>13</lineNumber>
+                    <lineNumber>15</lineNumber>
                     <returnType>
                         <int/>
                     </returnType>
-                    <name>theMethod</name>
+                    <name>foo</name>
                     <formals/>
                     <vardecls/>
                     <body/>
                     <ret>
-                        <int-literal>
-                            <num>1</num>
-                        </int-literal>
+                        <ref-id>
+                            <id>theVar</id>
+                        </ref-id>
                     </ret>
                 </methoddecl>
             </methoddecls>
@@ -44,21 +52,29 @@
         <classdecl>
             <name>C</name>
             <superName>A</superName>
-            <fields/>
+            <fields>
+                <field>
+                    <lineNumber>20</lineNumber>
+                    <type>
+                        <int/>
+                    </type>
+                    <name>theVar</name>
+                </field>
+            </fields>
             <methoddecls>
                 <methoddecl>
-                    <lineNumber>19</lineNumber>
+                    <lineNumber>23</lineNumber>
                     <returnType>
                         <int/>
                     </returnType>
-                    <name>renamedMethod</name>
+                    <name>foo</name>
                     <formals/>
                     <vardecls/>
                     <body/>
                     <ret>
-                        <int-literal>
-                            <num>1</num>
-                        </int-literal>
+                        <ref-id>
+                            <id>theVar</id>
+                        </ref-id>
                     </ret>
                 </methoddecl>
             </methoddecls>
@@ -69,25 +85,30 @@
             <fields/>
             <methoddecls>
                 <methoddecl>
-                    <lineNumber>31</lineNumber>
+                    <lineNumber>36</lineNumber>
                     <returnType>
                         <int/>
                     </returnType>
-                    <name>anotherMethod</name>
+                    <name>bar</name>
                     <formals>
                         <formal>
-                            <lineNumber>22</lineNumber>
+                            <lineNumber>26</lineNumber>
                             <type>
-                                <ref>
-                                    <id>B</id>
-                                </ref>
+                                <int/>
                             </type>
-                            <name>b</name>
+                            <name>anotherVar</name>
                         </formal>
                     </formals>
                     <vardecls>
                         <vardecl>
-                            <lineNumber>25</lineNumber>
+                            <lineNumber>28</lineNumber>
+                            <type>
+                                <int/>
+                            </type>
+                            <name>theVar</name>
+                        </vardecl>
+                        <vardecl>
+                            <lineNumber>30</lineNumber>
                             <type>
                                 <int/>
                             </type>
@@ -101,24 +122,14 @@
                                     <e>
                                         <and>
                                             <e1>
-                                                <call>
-                                                    <ownerExpr>
-                                                        <ref-id>
-                                                            <id>b</id>
-                                                        </ref-id>
-                                                    </ownerExpr>
-                                                    <methodId>theMethod</methodId>
-                                                    <actuals/>
-                                                </call>
+                                                <ref-id>
+                                                    <id>anotherVar</id>
+                                                </ref-id>
                                             </e1>
                                             <e2>
-                                                <call>
-                                                    <ownerExpr>
-                                                        <this/>
-                                                    </ownerExpr>
-                                                    <methodId>renamedMethod</methodId>
-                                                    <actuals/>
-                                                </call>
+                                                <ref-id>
+                                                    <id>theVar</id>
+                                                </ref-id>
                                             </e2>
                                         </and>
                                     </e>
@@ -128,30 +139,37 @@
                                 <block>
                                     <statements>
                                         <assign>
-                                            <lv>max</lv>
+                                            <lv>theVar</lv>
                                             <rv>
                                                 <add>
                                                     <e1>
-                                                        <call>
-                                                            <ownerExpr>
-                                                                <this/>
-                                                            </ownerExpr>
-                                                            <methodId>renamedMethod</methodId>
-                                                            <actuals/>
-                                                        </call>
+                                                        <ref-id>
+                                                            <id>theVar</id>
+                                                        </ref-id>
                                                     </e1>
                                                     <e2>
-                                                        <call>
-                                                            <ownerExpr>
-                                                                <ref-id>
-                                                                    <id>b</id>
-                                                                </ref-id>
-                                                            </ownerExpr>
-                                                            <methodId>theMethod</methodId>
-                                                            <actuals/>
-                                                        </call>
+                                                        <ref-id>
+                                                            <id>anotherVar</id>
+                                                        </ref-id>
                                                     </e2>
                                                 </add>
+                                            </rv>
+                                        </assign>
+                                        <assign>
+                                            <lv>max</lv>
+                                            <rv>
+                                                <mult>
+                                                    <e1>
+                                                        <int-literal>
+                                                            <num>2</num>
+                                                        </int-literal>
+                                                    </e1>
+                                                    <e2>
+                                                        <ref-id>
+                                                            <id>theVar</id>
+                                                        </ref-id>
+                                                    </e2>
+                                                </mult>
                                             </rv>
                                         </assign>
                                     </statements>

@@ -24,6 +24,7 @@ class C extends A {
 
 class D extends C {
     public int bar(int anotherVar) {
+        int theVar;
         int max;
 
         while (!(anotherVar && theVar)) {
