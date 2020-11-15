@@ -35,7 +35,7 @@
                 <methoddecl>
                     <lineNumber>15</lineNumber>
                     <returnType>
-                        <int-array/>
+                        <int/>
                     </returnType>
                     <name>foo</name>
                     <formals/>

@@ -23,8 +23,8 @@ class C extends A {
 }
 
 class D extends C {
-    public int[] bar(int anotherVar) {
-        System.out.println(theVar[theVar.length - 1] - anotherVar);
+    public int bar(int anotherVar) {
+        System.out.println(theVar[theVar.length] - anotherVar);
         return theVar.length - anotherVar;
     }
 
