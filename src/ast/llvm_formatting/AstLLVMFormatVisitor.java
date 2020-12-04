@@ -12,11 +12,15 @@ public class AstLLVMFormatVisitor implements Visitor {
     private String currentClass;
     private String currentMethod;
     private String classOfCalledMethod;
-    private final LLVMObjectOrientedUtils OOUtils = new LLVMObjectOrientedUtils();
+    private final LLVMObjectOrientedUtils OOUtils;
     private HashMap<String, AstType> methodVariableTypes;
     private final Stack<String> exprResults = new Stack<>();
     private int regCounter = 0;
     private int labelCounter = 0;
+
+    public AstLLVMFormatVisitor(Program program) {
+        OOUtils = new LLVMObjectOrientedUtils(program);
+    }
 
     public String getString() {
         return formatter.toString();
