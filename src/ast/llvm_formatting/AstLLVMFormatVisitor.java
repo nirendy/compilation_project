@@ -140,11 +140,10 @@ public class AstLLVMFormatVisitor implements Visitor {
     }
 
     private void formatReturnLine(MethodDecl methodDecl) {
+        methodDecl.ret().accept(this);
         formatIndented("ret ");
         methodDecl.returnType().accept(this);
-        formatter.format(" ");
-        methodDecl.ret().accept(this);
-        formatter.format("%s\n", exprResults.pop());
+        formatter.format(" %s\n", exprResults.pop());
     }
 
     @Override
@@ -177,11 +176,11 @@ public class AstLLVMFormatVisitor implements Visitor {
 
     @Override
     public void visit(AssignStatement assignStatement) {
-        AstType lvType = formatAssignmentLv(assignStatement.lv());
-        String destRegister = exprResults.pop();
-
         assignStatement.rv().accept(this);
         String rv = exprResults.pop();
+
+        AstType lvType = formatAssignmentLv(assignStatement.lv());
+        String destRegister = exprResults.pop();
 
         formatStore(rv, destRegister, lvType);
     }
