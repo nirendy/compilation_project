@@ -37,6 +37,8 @@ public class AstLLVMFormatVisitor implements Visitor {
 
     @Override
     public void visit(Program program) {
+        formatter.format("%s\n\n\n", LLVMConstants.getFunctionDeclarations());
+
         program.mainClass().accept(this);
         formatter.format("\n");
         for (ClassDecl classdecl : program.classDecls()) {
