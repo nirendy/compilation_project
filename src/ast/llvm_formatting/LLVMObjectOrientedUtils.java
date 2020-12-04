@@ -35,7 +35,16 @@ public class LLVMObjectOrientedUtils {
     }
 
     public int getFieldOffset(String className, String fieldName) {
-        return typeToSize(classesToFieldsMapping.get(className).get(fieldName).type());
+        // The first field of each class starts at offset 8, since the first 8 bytes are the reference to the V-table
+        int offset = 8;
+        for (VarDecl field : classesToFieldsMapping.get(className).values()) {
+            if (field.name().equals(fieldName))
+                return offset;
+
+            offset += typeToSize(field.type());
+        }
+
+        return offset;
     }
 
     public AstType getFieldType(String className, String fieldName) {
@@ -55,11 +64,9 @@ public class LLVMObjectOrientedUtils {
     }
 
     public int getInstanceSize(String className) {
-        // Each class instance is using the first 8 bits for the V-table
+        // Each class instance is using the first 8 bytes for the V-table
         int size = 8;
-
-        Map<String, VarDecl> classFields = classesToFieldsMapping.get(className);
-        for (VarDecl field : classFields.values()) {
+        for (VarDecl field : classesToFieldsMapping.get(className).values()) {
             size += typeToSize(field.type());
         }
 
