@@ -9,7 +9,7 @@ import java.util.List;
 public class LLVMObjectOrientedUtils {
     public int getFieldOffset(String className, String fieldName) {
         // TODO: implement (waiting for @nimrod.pansky)
-        return 8;
+        return 888;
     }
 
     public AstType getFieldType(String className, String fieldName) {
@@ -19,7 +19,7 @@ public class LLVMObjectOrientedUtils {
 
     public int getMethodIndex(String className, String methodName) {
         // TODO: implement (waiting for @nimrod.pansky)
-        return 5;
+        return 555;
     }
 
     public AstType getMethodReturnType(String className, String methodName) {
@@ -36,11 +36,11 @@ public class LLVMObjectOrientedUtils {
 
     public int getInstanceSize(String className) {
         // TODO: implement (waiting for @nimrod.pansky)
-        return 12;
+        return 666;
     }
 
     public int getNumberOfMethods(String className) {
         // TODO: implement (waiting for @nimrod.pansky)
-        return 2;
+        return 333;
     }
 }
