@@ -37,7 +37,7 @@ public class Main {
                     throw new UnsupportedOperationException("TODO - Ex. 3");
 
                 } else if (action.equals("compile")) {
-                    AstLLVMFormatVisitor LLVMFormatter = new AstLLVMFormatVisitor();
+                    AstLLVMFormatVisitor LLVMFormatter = new AstLLVMFormatVisitor(prog);
                     LLVMFormatter.visit(prog);
                     outFile.write(LLVMFormatter.getString());
 
