@@ -1,4 +1,5 @@
 import ast.*;
+import ast.llvm_formatting.AstLLVMFormatVisitor;
 
 import java.io.*;
 
@@ -36,7 +37,9 @@ public class Main {
                     throw new UnsupportedOperationException("TODO - Ex. 3");
 
                 } else if (action.equals("compile")) {
-                    throw new UnsupportedOperationException("TODO - Ex. 2");
+                    AstLLVMFormatVisitor LLVMFormatter = new AstLLVMFormatVisitor();
+                    LLVMFormatter.visit(prog);
+                    outFile.write(LLVMFormatter.getString());
 
                 } else if (action.equals("rename")) {
                     var type = args[2];
