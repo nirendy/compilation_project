@@ -210,17 +210,17 @@ public class AstLLVMFormatVisitor implements Visitor {
         formatIndented("br i1 %s, label %%then_case_%d, label %%else_case_%d\n", condValue, labelPostfix, labelPostfix);
 
         // then case
-        formatter.format("%%then_case_%d:\n", labelPostfix);
+        formatter.format("then_case_%d:\n", labelPostfix);
         ifStatement.thencase().accept(this);
         formatIndented("br label %%if_end_%d\n", labelPostfix);
 
         // else case
-        formatter.format("%%else_case_%d:\n", labelPostfix);
+        formatter.format("else_case_%d:\n", labelPostfix);
         ifStatement.elsecase().accept(this);
         formatIndented("br label %%if_end_%d\n", labelPostfix);
 
         // end
-        formatter.format("%%if_end_%d:\n", labelPostfix);
+        formatter.format("if_end_%d:\n", labelPostfix);
     }
 
     @Override
@@ -228,18 +228,18 @@ public class AstLLVMFormatVisitor implements Visitor {
         int labelPostfix = nextLabelPostfix();
 
         // calculate condition
-        formatter.format("%%while_check_cond_%d:\n", labelPostfix);
+        formatter.format("while_check_cond_%d:\n", labelPostfix);
         whileStatement.cond().accept(this);
         String condValue = exprResults.pop();
         formatIndented("br i1 %s, label %%while_body_%d, label %%while_end_%d\n", condValue, labelPostfix, labelPostfix);
 
         // while body
-        formatter.format("%%while_body_%d:\n", labelPostfix);
+        formatter.format("while_body_%d:\n", labelPostfix);
         whileStatement.body().accept(this);
         formatIndented("br label %%while_check_cond_%d\n", labelPostfix);
 
         // end
-        formatter.format("%%while_end_%d:\n", labelPostfix);
+        formatter.format("while_end_%d:\n", labelPostfix);
     }
 
     @Override
@@ -330,23 +330,23 @@ public class AstLLVMFormatVisitor implements Visitor {
         formatIndented("br label %%and_left_cond_%d\n", labelPostfix);
 
         // check first expression's result
-        formatter.format("%%and_left_cond_%d:\n", labelPostfix);
+        formatter.format("and_left_cond_%d:\n", labelPostfix);
         formatIndented("br i1 %s, label %%and_check_right_cond_%d, label %%and_result_%d\n",
                 value1, labelPostfix, labelPostfix);
 
         // calculate second expression's result
-        formatter.format("%%and_check_right_cond_%d:\n", labelPostfix);
+        formatter.format("and_check_right_cond_%d:\n", labelPostfix);
         e.e2().accept(this);
         String value2 = exprResults.pop();
         formatIndented("br label %%and_right_cond_%d\n", labelPostfix);
 
         // jump to the result calculation
-        formatter.format("%%and_right_cond_%d:\n", labelPostfix);
+        formatter.format("and_right_cond_%d:\n", labelPostfix);
         formatIndented("br label %%and_result_%d\n", labelPostfix);
 
         // calculate result (based on the label that we got here from)
         String resultReg = nextAnonymousReg();
-        formatter.format("%%and_result_%d:\n", labelPostfix);
+        formatter.format("and_result_%d:\n", labelPostfix);
         formatIndented("%s = phi i1 [0, %%and_left_cond_%d], [%s, %%and_right_cond_%d]\n",
                 resultReg, labelPostfix, value2, labelPostfix);
         exprResults.push(resultReg);
