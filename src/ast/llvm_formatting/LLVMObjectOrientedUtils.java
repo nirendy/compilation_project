@@ -2,10 +2,7 @@ package ast.llvm_formatting;
 
 import ast.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class LLVMObjectOrientedUtils {
 
@@ -64,13 +61,7 @@ public class LLVMObjectOrientedUtils {
     }
 
     public int getInstanceSize(String className) {
-        // Each class instance is using the first 8 bytes for the V-table
-        int size = 8;
-        for (VarDecl field : classesToFieldsMapping.get(className).values()) {
-            size += typeToSize(field.type());
-        }
-
-        return size;
+        return getFieldOffset(className, null);
     }
 
     public int getNumberOfMethods(String className) {
@@ -137,6 +128,35 @@ public class LLVMObjectOrientedUtils {
         }
 
         return classToFieldsMapping;
+    }
+
+    public Formatter getVTablesFormatter() {
+        Formatter formatter = new Formatter();
+
+        Map<String, String> methodsFormatting;
+        MethodData methodData;
+        int tableSize;
+        for (String className : classToMethodsMapping.keySet()) {
+            tableSize = classToMethodsMapping.get(className).size();
+            formatter.format("@.%s_vtable = global [%d x i8*] [", className, tableSize);
+
+            methodsFormatting = new HashMap<>();
+            for (String methodName : classToMethodsMapping.get(className).keySet()) {
+                methodData = classToMethodsMapping.get(className).get(methodName);
+                methodsFormatting.put(Integer.toString(methodData.index),
+                        String.format("i8* bitcast (i32 (i8*, i32)* @%s.%s to i8*)", className, methodName));
+
+            }
+            for (int index = 0; index < tableSize; index++) {
+                formatter.format(methodsFormatting.get(Integer.toString(index)));
+                if (index < tableSize - 1)
+                    formatter.format(", ");
+            }
+
+            formatter.format("]\n");
+        }
+
+        return formatter;
     }
 
 }
