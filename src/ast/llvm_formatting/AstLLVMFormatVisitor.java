@@ -228,6 +228,7 @@ public class AstLLVMFormatVisitor implements Visitor {
         int labelPostfix = nextLabelPostfix();
 
         // calculate condition
+        formatIndented("br label %%while_check_cond_%d\n", labelPostfix);
         formatter.format("while_check_cond_%d:\n", labelPostfix);
         whileStatement.cond().accept(this);
         String condValue = exprResults.pop();
@@ -445,10 +446,7 @@ public class AstLLVMFormatVisitor implements Visitor {
     @Override
     public void visit(ArrayLengthExpr e) {
         e.arrayExpr().accept(this);
-        String arrayReg = exprResults.pop();
-        // load array to get a pointer to the first element
-        String elementPtrReg = nextAnonymousReg();
-        formatIndented("%s = load i32*, i32** %s\n", elementPtrReg, arrayReg);
+        String elementPtrReg = exprResults.pop();
 
         // load element pointer to get the value
         String elementValueReg = nextAnonymousReg();
@@ -495,6 +493,12 @@ public class AstLLVMFormatVisitor implements Visitor {
 
     private void formatMethodCall(String methodPtrReg, String ownerReg, List<Expr> actuals,
                                   AstType returnType, List<AstType> formalArgsTypes) {
+        List<String> actualValues = new ArrayList<>();
+        for (var actual : actuals) {
+            actual.accept(this);
+            actualValues.add(exprResults.pop());
+        }
+
         String resultReg = nextAnonymousReg();
         formatIndented("%s = call ", resultReg);
         returnType.accept(this);
@@ -503,8 +507,7 @@ public class AstLLVMFormatVisitor implements Visitor {
             formatter.format(", ");
             formalArgsTypes.get(i).accept(this);
             formatter.format(" ");
-            actuals.get(i).accept(this);
-            formatter.format(exprResults.pop());
+            formatter.format("%s", actualValues.get(i));
         }
         formatter.format(")\n");
         exprResults.push(resultReg);
