@@ -202,17 +202,44 @@ public class AstLLVMFormatVisitor implements Visitor {
 
     @Override
     public void visit(IfStatement ifStatement) {
-        // TODO: implement.
-        // ifStatement.cond().accept(this);
-        // ifStatement.thencase().accept(this);
-        // ifStatement.elsecase().accept(this);
+        int labelPostfix = nextLabelPostfix();
+
+        // calculate condition
+        ifStatement.cond().accept(this);
+        String condValue = exprResults.pop();
+        formatIndented("br i1 %s, label %%then_case_%d, label %%else_case_%d\n", condValue, labelPostfix, labelPostfix);
+
+        // then case
+        formatter.format("%%then_case_%d:\n", labelPostfix);
+        ifStatement.thencase().accept(this);
+        formatIndented("br label %%if_end_%d\n", labelPostfix);
+
+        // else case
+        formatter.format("%%else_case_%d:\n", labelPostfix);
+        ifStatement.elsecase().accept(this);
+        formatIndented("br label %%if_end_%d\n", labelPostfix);
+
+        // end
+        formatter.format("%%if_end_%d:\n", labelPostfix);
     }
 
     @Override
     public void visit(WhileStatement whileStatement) {
-        // TODO: implement.
-        // whileStatement.cond().accept(this);
-        // whileStatement.body().accept(this);
+        int labelPostfix = nextLabelPostfix();
+
+        // calculate condition
+        formatter.format("%%while_check_cond_%d:\n", labelPostfix);
+        whileStatement.cond().accept(this);
+        String condValue = exprResults.pop();
+        formatIndented("br i1 %s, label %%while_body_%d, label %%while_end_%d\n", condValue, labelPostfix, labelPostfix);
+
+        // while body
+        formatter.format("%%while_body_%d:\n", labelPostfix);
+        whileStatement.body().accept(this);
+        formatIndented("br label %%while_check_cond_%d\n", labelPostfix);
+
+        // end
+        formatter.format("%%while_end_%d:\n", labelPostfix);
     }
 
     @Override
@@ -288,25 +315,60 @@ public class AstLLVMFormatVisitor implements Visitor {
         String value1 = exprResults.pop();
         e.e2().accept(this);
         String value2 = exprResults.pop();
-        String destReg = nextAnonymousReg();
-        formatIndented("%s = %s i32 %s, %s\n", destReg, op, value1, value2);
-        exprResults.push(destReg);
+        String resultReg = nextAnonymousReg();
+        formatIndented("%s = %s i32 %s, %s\n", resultReg, op, value1, value2);
+        exprResults.push(resultReg);
     }
 
     @Override
     public void visit(AndExpr e) {
-        // TODO: Implement.
+        int labelPostfix = nextLabelPostfix();
 
+        // calculate first expression
+        e.e1().accept(this);
+        String value1 = exprResults.pop();
+        formatIndented("br label %%and_left_cond_%d\n", labelPostfix);
+
+        // check first expression's result
+        formatter.format("%%and_left_cond_%d:\n", labelPostfix);
+        formatIndented("br i1 %s, label %%and_check_right_cond_%d, label %%and_result_%d\n",
+                value1, labelPostfix, labelPostfix);
+
+        // calculate second expression's result
+        formatter.format("%%and_check_right_cond_%d:\n", labelPostfix);
+        e.e2().accept(this);
+        String value2 = exprResults.pop();
+        formatIndented("br label %%and_right_cond_%d\n", labelPostfix);
+
+        // jump to the result calculation
+        formatter.format("%%and_right_cond_%d:\n", labelPostfix);
+        formatIndented("br label %%and_result_%d\n", labelPostfix);
+
+        // calculate result (based on the label that we got here from)
+        String resultReg = nextAnonymousReg();
+        formatter.format("%%and_result_%d:\n", labelPostfix);
+        formatIndented("%s = phi i1 [0, %%and_left_cond_%d], [%s, %%and_right_cond_%d]\n",
+                resultReg, labelPostfix, value2, labelPostfix);
+        exprResults.push(resultReg);
     }
 
     @Override
     public void visit(LtExpr e) {
-        // TODO: Implement.
+        e.e1().accept(this);
+        String value1 = exprResults.pop();
+        e.e2().accept(this);
+        String value2 = exprResults.pop();
+        String resultReg = nextAnonymousReg();
+        formatIndented("%s = icmp slt i32 %s, %s\n", resultReg, value1, value2);
+        exprResults.push(resultReg);
     }
     
     @Override
     public void visit(NotExpr e) {
-        // TODO: Implement.
+        e.e().accept(this);
+        String resultReg = nextAnonymousReg();
+        formatIndented("%s = sub i1 1, %s\n", resultReg, exprResults.pop());
+        exprResults.push(resultReg);
     }
     
     @Override
