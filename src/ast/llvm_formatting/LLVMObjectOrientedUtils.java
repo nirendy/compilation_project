@@ -3,18 +3,23 @@ package ast.llvm_formatting;
 import ast.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class LLVMObjectOrientedUtils {
 
     Map<String, Map<String, MethodData>> classToMethodsMapping;
-    Map<String, Map<String, VarDecl>> classesToFieldsMapping;
+    Map<String, Map<String, VarDecl>> classToFieldsMapping;
 
-    private static class MethodData {
+    public static class MethodData {
+        String declaringClass;
+        final String methodName;
         final int index;
         final AstType returnType;
         final List<AstType> formalArgsTypes;
 
-        private MethodData(int index, MethodDecl methodNode) {
+        private MethodData(String className, MethodDecl methodNode, int index) {
+            this.declaringClass = className;
+            this.methodName = methodNode.name();
             this.index = index;
             this.returnType = methodNode.returnType();
 
@@ -24,17 +29,31 @@ public class LLVMObjectOrientedUtils {
             }
             this.formalArgsTypes = formalArgsTypes;
         }
+
+        private MethodData(String className, String methodName, int index, AstType returnType,
+                           List<AstType> formalArgsTypes) {
+            this.declaringClass = className;
+            this.methodName = methodName;
+            this.index = index;
+            this.returnType = returnType;
+            this.formalArgsTypes = formalArgsTypes;
+        }
+
+        private MethodData getRedeclaredCopy(String overridingClassName) {
+            return new MethodData(overridingClassName, this.methodName,
+                    this.index, this.returnType, this.formalArgsTypes);
+        }
     }
 
     public LLVMObjectOrientedUtils(Program program) {
         classToMethodsMapping = createClassToMethodsMapping(program);
-        classesToFieldsMapping = createClassToFieldsMapping(program);
+        classToFieldsMapping = createClassToFieldsMapping(program);
     }
 
     public int getFieldOffset(String className, String fieldName) {
         // The first field of each class starts at offset 8, since the first 8 bytes are the reference to the V-table
         int offset = 8;
-        for (VarDecl field : classesToFieldsMapping.get(className).values()) {
+        for (VarDecl field : classToFieldsMapping.get(className).values()) {
             if (field.name().equals(fieldName))
                 return offset;
 
@@ -45,7 +64,7 @@ public class LLVMObjectOrientedUtils {
     }
 
     public AstType getFieldType(String className, String fieldName) {
-        return classesToFieldsMapping.get(className).get(fieldName).type();
+        return classToFieldsMapping.get(className).get(fieldName).type();
     }
 
     public int getMethodIndex(String className, String methodName) {
@@ -70,7 +89,7 @@ public class LLVMObjectOrientedUtils {
 
     private int typeToSize(AstType type) {
         if (type instanceof IntAstType)
-            return 32;
+            return 4;
         else if (type instanceof BoolAstType)
             return 1;
 
@@ -95,9 +114,13 @@ public class LLVMObjectOrientedUtils {
 
             index = classMethods.size();
             for (MethodDecl methodNode : classNode.methoddecls()) {
-                if (!classMethods.containsKey(methodNode.name())) {
-                    // A method can override an inherited class. In that case it shouldn't be re-added to the list
-                    classMethods.put(methodNode.name(), new MethodData(index, methodNode));
+                if (classMethods.containsKey(methodNode.name())) {
+                    // A method can override an inherited class. In that case it shouldn't be re-added to the list,
+                    // but we should update the name of the declaring class
+                    MethodData baseMethodData = classMethods.remove(methodNode.name());
+                    classMethods.put(methodNode.name(), baseMethodData.getRedeclaredCopy(classNode.name()));
+                } else {
+                    classMethods.put(methodNode.name(), new MethodData(classNode.name(), methodNode, index));
                     index++;
                 }
             }
@@ -130,6 +153,13 @@ public class LLVMObjectOrientedUtils {
         return classToFieldsMapping;
     }
 
+    public List<MethodData> getMethodsData(String className) {
+        Map<String, MethodData> methodsMapping = classToMethodsMapping.get(className);
+        return methodsMapping.values().stream()
+                .sorted(Comparator.comparing((methodData) -> methodData.index))
+                .collect(Collectors.toList());
+    }
+
     public Formatter getVTablesFormatter() {
         Formatter formatter = new Formatter();
 
@@ -158,5 +188,4 @@ public class LLVMObjectOrientedUtils {
 
         return formatter;
     }
-
 }

@@ -2,10 +2,7 @@ package ast.llvm_formatting;
 
 import ast.*;
 
-import java.util.Formatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 public class AstLLVMFormatVisitor implements Visitor {
     private final Formatter formatter = new Formatter();
@@ -41,6 +38,7 @@ public class AstLLVMFormatVisitor implements Visitor {
 
     @Override
     public void visit(Program program) {
+        formatVTables(program);
         formatter.format("%s\n\n\n", LLVMConstants.getFunctionDeclarations());
 
         program.mainClass().accept(this);
@@ -49,6 +47,49 @@ public class AstLLVMFormatVisitor implements Visitor {
             classdecl.accept(this);
             formatter.format("\n");  // this is unnecessary, but the examples have it too.
         }
+    }
+
+    private void formatVTables(Program program) {
+        int tableSize;
+
+        for (ClassDecl classdecl : program.classDecls()) {
+            String className = classdecl.name();
+            List<LLVMObjectOrientedUtils.MethodData> methodsData = OOUtils.getMethodsData(className);
+            tableSize = methodsData.size();
+            formatter.format("@.%s_vtable = global [%d x i8*] [", className, tableSize);
+            if (tableSize == 0) {
+                formatter.format("]\n");
+                return;
+            }
+
+            else if (tableSize > 1) {
+                formatter.format("\n\t");
+            }
+
+            String sep = "";
+            for (var methodData : methodsData) {
+                formatter.format("%si8* bitcast (", sep);
+                formatMethodSignature(methodData.returnType, methodData.formalArgsTypes);
+                formatter.format(" @%s.%s to i8*)", methodData.declaringClass, methodData.methodName);
+                sep = ",\n\t";
+            }
+
+            if (tableSize > 1) {
+                formatter.format("\n");
+            }
+
+            formatter.format("]\n\n");
+        }
+    }
+
+    private void formatMethodSignature(AstType returnType, List<AstType> formalArgsTypes) {
+        returnType.accept(this);
+        formatter.format(" (i8*");
+        for (var formalArgType : formalArgsTypes) {
+            formatter.format(", ");
+            formalArgType.accept(this);
+        }
+        formatter.format(")*");
     }
 
     @Override
@@ -388,16 +429,6 @@ public class AstLLVMFormatVisitor implements Visitor {
 
         // make method call
         formatMethodCall(methodPtrReg, ownerReg, e.actuals(), returnType, formalArgsTypes);
-    }
-
-    private void formatMethodSignature(AstType returnType, List<AstType> formalArgsTypes) {
-        returnType.accept(this);
-        formatter.format(" (i8*");
-        for (var formalArgType : formalArgsTypes) {
-            formatter.format(", ");
-            formalArgType.accept(this);
-        }
-        formatter.format(")*");
     }
 
     private void formatMethodCall(String methodPtrReg, String ownerReg, List<Expr> actuals,
