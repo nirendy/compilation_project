@@ -59,10 +59,6 @@ public class Main {
                     RenamingFactory.rename(prog, originalName, newName, Integer.parseInt(originalLine), isMethod);
                     new AstXMLSerializer().serialize(prog, outfilename);
 
-//                    AstPrintVisitor astPrinter = new AstPrintVisitor();
-//                    astPrinter.visit(prog);
-//                    outFile.write(astPrinter.getString());
-
                 } else {
                     throw new IllegalArgumentException("unknown command line action " + action);
                 }
