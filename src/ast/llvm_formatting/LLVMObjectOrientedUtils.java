@@ -53,11 +53,13 @@ public class LLVMObjectOrientedUtils {
     public int getFieldOffset(String className, String fieldName) {
         // The first field of each class starts at offset 8, since the first 8 bytes are the reference to the V-table
         int offset = 8;
-        for (VarDecl field : classToFieldsMapping.get(className).values()) {
-            if (field.name().equals(fieldName))
+        List<String> sortedFields = new ArrayList<>(classToFieldsMapping.get(className).keySet());
+        Collections.sort(sortedFields);
+        for (String field : sortedFields) {
+            if (field.equals(fieldName))
                 return offset;
 
-            offset += typeToSize(field.type());
+            offset += typeToSize(classToFieldsMapping.get(className).get(field).type());
         }
 
         return offset;
