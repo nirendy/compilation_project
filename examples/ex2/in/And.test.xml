@@ -173,121 +173,84 @@
                         </vardecl>
                     </vardecls>
                     <body>
-                        <assign>
-                            <lv>b</lv>
-                            <rv>
-                                <false/>
-                            </rv>
-                        </assign>
-                        <assign>
-                            <lv>t</lv>
-                            <rv>
-                                <ref-id>
-                                    <id>x</id>
-                                </ref-id>
-                            </rv>
-                        </assign>
-                        <assign>
-                            <lv>c</lv>
-                            <rv>
-                                <true/>
-                            </rv>
-                        </assign>
-                        <assign>
-                            <lv>arr</lv>
-                            <rv>
-                                <new-int-array>
-                                    <lengthExpr>
+                        <if>
+                            <cond>
+                                <lt>
+                                    <e1>
+                                        <int-literal>
+                                            <num>
+                                                1
+                                            </num>
+                                        </int-literal>
+                                    </e1>
+                                    <e2>
                                         <ref-id>
                                             <id>x</id>
                                         </ref-id>
-                                    </lengthExpr>
-                                </new-int-array>
-                            </rv>
-                        </assign>
+                                    </e2>
+                                </lt>
+                            </cond>
+                            <thencase>
+                                <block>
+                                    <statements>
+                            <assign>
+                                <lv>b</lv>
+                                <rv>
+                                    <false/>
+                                </rv>
+                            </assign>
+                            <assign>
+                                <lv>t</lv>
+                                <rv>
+                                    <ref-id>
+                                        <id>x</id>
+                                    </ref-id>
+                                </rv>
+                            </assign>
+                            <assign>
+                                <lv>c</lv>
+                                <rv>
+                                    <true/>
+                                </rv>
+                            </assign>
+                            <assign>
+                                <lv>arr</lv>
+                                <rv>
+                                    <new-int-array>
+                                        <lengthExpr>
+                                            <ref-id>
+                                                <id>x</id>
+                                            </ref-id>
+                                        </lengthExpr>
+                                    </new-int-array>
+                                </rv>
+                            </assign>
 
-                        <if>
-                            <cond>
-                                <and>
-                                    <e1>
-                                        <lt>
-                                            <e1>
-                                                <int-literal>
-                                                    <num>
-                                                        1
-                                                    </num>
-
-                                                </int-literal>
-                                            </e1>
-                                            <e2>
-                                                <call>
-                                                    <ownerExpr>
-                                                        <this/>
-                                                    </ownerExpr>
-                                                    <methodId>run</methodId>
-                                                    <actuals>
-                                                        <actual>
-                                                            <subtract>
-                                                                <e1>
-                                                                    <ref-id>
-                                                                        <id>t</id>
-                                                                    </ref-id>
-
-                                                                </e1>
-                                                                <e2>
-                                                                    <int-literal>
-                                                                        <num>1</num>
-                                                                    </int-literal>
-                                                                </e2>
-
-                                                            </subtract>
-                                                        </actual>
-                                                    </actuals>
-                                                </call>
-
-
-                                            </e2>
-                                        </lt>
-
-                                    </e1>
-                                    <e2>
-                                        <lt>
-                                            <e1>
-                                                <array-access>
-                                                    <arrayExpr>
-                                                        <ref-id>
-                                                            <id>arr</id>
-                                                        </ref-id>
-                                                    </arrayExpr>
-                                                    <indexExpr>
-                                                        <subtract>
-                                                            <e1>
-                                                                <add>
+                            <if>
+                                <cond>
+                                    <and>
+                                        <e1>
+                                            <lt>
+                                                <e1>
+                                                    <int-literal>
+                                                        <num>
+                                                            1
+                                                        </num>
+                                                    </int-literal>
+                                                </e1>
+                                                <e2>
+                                                    <call>
+                                                        <ownerExpr>
+                                                            <this/>
+                                                        </ownerExpr>
+                                                        <methodId>run</methodId>
+                                                        <actuals>
+                                                            <actual>
+                                                                <subtract>
                                                                     <e1>
-                                                                        <call>
-                                                                            <ownerExpr>
-                                                                                <this/>
-                                                                            </ownerExpr>
-                                                                            <methodId>bar</methodId>
-                                                                            <actuals>
-                                                                                <actual>
-                                                                                    <subtract>
-                                                                                        <e1>
-                                                                                            <ref-id>
-                                                                                                <id>t</id>
-                                                                                            </ref-id>
-
-                                                                                        </e1>
-                                                                                        <e2>
-                                                                                            <int-literal>
-                                                                                                <num>1</num>
-                                                                                            </int-literal>
-                                                                                        </e2>
-
-                                                                                    </subtract>
-                                                                                </actual>
-                                                                            </actuals>
-                                                                        </call>
+                                                                        <ref-id>
+                                                                            <id>t</id>
+                                                                        </ref-id>
 
                                                                     </e1>
                                                                     <e2>
@@ -295,34 +258,55 @@
                                                                             <num>1</num>
                                                                         </int-literal>
                                                                     </e2>
-                                                                </add>
 
-                                                            </e1>
-                                                            <e2>
-                                                                <ref-id>
-                                                                    <id>t</id>
-                                                                </ref-id>
-                                                            </e2>
-                                                        </subtract>
-                                                    </indexExpr>
+                                                                </subtract>
+                                                            </actual>
+                                                        </actuals>
+                                                    </call>
 
-                                                </array-access>
-                                            </e1>
-                                            <e2>
-                                                <subtract>
-                                                    <e1>
-                                                        <call>
-                                                            <ownerExpr>
-                                                                <this/>
-                                                            </ownerExpr>
-                                                            <methodId>bar</methodId>
-                                                            <actuals>
-                                                                <actual>
-                                                                    <subtract>
+
+                                                </e2>
+                                            </lt>
+
+                                        </e1>
+                                        <e2>
+                                            <lt>
+                                                <e1>
+                                                    <array-access>
+                                                        <arrayExpr>
+                                                            <ref-id>
+                                                                <id>arr</id>
+                                                            </ref-id>
+                                                        </arrayExpr>
+                                                        <indexExpr>
+                                                            <subtract>
+                                                                <e1>
+                                                                    <add>
                                                                         <e1>
-                                                                            <ref-id>
-                                                                                <id>t</id>
-                                                                            </ref-id>
+                                                                            <call>
+                                                                                <ownerExpr>
+                                                                                    <this/>
+                                                                                </ownerExpr>
+                                                                                <methodId>bar</methodId>
+                                                                                <actuals>
+                                                                                    <actual>
+                                                                                        <subtract>
+                                                                                            <e1>
+                                                                                                <ref-id>
+                                                                                                    <id>t</id>
+                                                                                                </ref-id>
+
+                                                                                            </e1>
+                                                                                            <e2>
+                                                                                                <int-literal>
+                                                                                                    <num>1</num>
+                                                                                                </int-literal>
+                                                                                            </e2>
+
+                                                                                        </subtract>
+                                                                                    </actual>
+                                                                                </actuals>
+                                                                            </call>
 
                                                                         </e1>
                                                                         <e2>
@@ -330,131 +314,190 @@
                                                                                 <num>1</num>
                                                                             </int-literal>
                                                                         </e2>
+                                                                    </add>
 
-                                                                    </subtract>
-                                                                </actual>
-                                                            </actuals>
-                                                        </call>
+                                                                </e1>
+                                                                <e2>
+                                                                    <ref-id>
+                                                                        <id>t</id>
+                                                                    </ref-id>
+                                                                </e2>
+                                                            </subtract>
+                                                        </indexExpr>
 
-                                                    </e1>
-                                                    <e2>
+                                                    </array-access>
+                                                </e1>
+                                                <e2>
+                                                    <subtract>
+                                                        <e1>
+                                                            <call>
+                                                                <ownerExpr>
+                                                                    <this/>
+                                                                </ownerExpr>
+                                                                <methodId>bar</methodId>
+                                                                <actuals>
+                                                                    <actual>
+                                                                        <subtract>
+                                                                            <e1>
+                                                                                <ref-id>
+                                                                                    <id>t</id>
+                                                                                </ref-id>
 
-                                                        <ref-id>
-                                                            <id>t</id>
-                                                        </ref-id>
-                                                    </e2>
-                                                </subtract>
-                                            </e2>
-                                        </lt>
-                                    </e2>
-                                </and>
-                            </cond>
+                                                                            </e1>
+                                                                            <e2>
+                                                                                <int-literal>
+                                                                                    <num>1</num>
+                                                                                </int-literal>
+                                                                            </e2>
 
-                            <thencase>
-                                <block>
-                                    <statements>
-                                        <assign>
-                                            <lv>b</lv>
-                                            <rv>
-                                                <true/>
-                                            </rv>
-                                        </assign>
+                                                                        </subtract>
+                                                                    </actual>
+                                                                </actuals>
+                                                            </call>
 
-                                    </statements>
-                                </block>
-                            </thencase>
-                            <elsecase>
-                                <block>
-                                    <statements>
-                                        <assign>
-                                            <lv>b</lv>
-                                            <rv>
-                                                <false/>
-                                            </rv>
-                                        </assign>
+                                                        </e1>
+                                                        <e2>
 
-                                    </statements>
-                                </block>
-                            </elsecase>
-                        </if>
+                                                            <ref-id>
+                                                                <id>t</id>
+                                                            </ref-id>
+                                                        </e2>
+                                                    </subtract>
+                                                </e2>
+                                            </lt>
+                                        </e2>
+                                    </and>
+                                </cond>
+
+                                <thencase>
+                                    <block>
+                                        <statements>
+                                            <assign>
+                                                <lv>b</lv>
+                                                <rv>
+                                                    <true/>
+                                                </rv>
+                                            </assign>
+
+                                        </statements>
+                                    </block>
+                                </thencase>
+                                <elsecase>
+                                    <block>
+                                        <statements>
+                                            <assign>
+                                                <lv>b</lv>
+                                                <rv>
+                                                    <false/>
+                                                </rv>
+                                            </assign>
+
+                                        </statements>
+                                    </block>
+                                </elsecase>
+                            </if>
 
 
-                        <if>
-                            <cond>
-                                <and>
-                                    <e1>
-                                        <ref-id>
-                                            <id>b</id>
-                                        </ref-id>
-                                    </e1>
-                                    <e2>
-                                        <and>
-                                            <e1>
-                                                <ref-id>
-                                                    <id>b</id>
-                                                </ref-id>
-                                            </e1>
-                                            <e2>
-                                                <ref-id>
-                                                    <id>c</id>
-                                                </ref-id>
-                                            </e2>
-                                        </and>
-                                    </e2>
-                                </and>
-                            </cond>
-                            <thencase>
-                                <assign>
-                                    <lv>x</lv>
-                                    <rv>
-                                        <int-literal>
-                                            <num>0</num>
-                                        </int-literal>
-                                    </rv>
-                                </assign>
-                            </thencase>
-                            <elsecase>
-                                <assign>
-                                    <lv>x</lv>
-                                    <rv>
-                                        <int-literal>
-                                            <num>1</num>
-                                        </int-literal>
-                                    </rv>
-                                </assign>
-                            </elsecase>
-                        </if>
-                        <sysout>
-                            <arg>
-                                <ref-id>
-                                    <id>x</id>
-                                </ref-id>
-                            </arg>
-                        </sysout>
-                        <call>
-                            <ownerExpr>
-                                <this/>
-                            </ownerExpr>
-                            <methodId>bar</methodId>
-                            <actuals>
-                                <actual>
-                                    <subtract>
+                            <if>
+                                <cond>
+                                    <and>
                                         <e1>
                                             <ref-id>
-                                                <id>t</id>
+                                                <id>b</id>
                                             </ref-id>
-
                                         </e1>
                                         <e2>
+                                            <and>
+                                                <e1>
+                                                    <ref-id>
+                                                        <id>b</id>
+                                                    </ref-id>
+                                                </e1>
+                                                <e2>
+                                                    <ref-id>
+                                                        <id>c</id>
+                                                    </ref-id>
+                                                </e2>
+                                            </and>
+                                        </e2>
+                                    </and>
+                                </cond>
+                                <thencase>
+                                    <assign>
+                                        <lv>x</lv>
+                                        <rv>
+                                            <int-literal>
+                                                <num>0</num>
+                                            </int-literal>
+                                        </rv>
+                                    </assign>
+                                </thencase>
+                                <elsecase>
+                                    <assign>
+                                        <lv>x</lv>
+                                        <rv>
                                             <int-literal>
                                                 <num>1</num>
                                             </int-literal>
-                                        </e2>
+                                        </rv>
+                                    </assign>
+                                </elsecase>
+                            </if>
+                            <sysout>
+                                <arg>
+                                    <ref-id>
+                                        <id>x</id>
+                                    </ref-id>
+                                </arg>
+                            </sysout>
+                            <assign>
+                                <lv>t</lv>
+                                <rv>
+                                    <call>
+                                        <ownerExpr>
+                                            <this/>
+                                        </ownerExpr>
+                                        <methodId>bar</methodId>
+                                        <actuals>
+                                            <actual>
+                                                <subtract>
+                                                    <e1>
+                                                        <ref-id>
+                                                            <id>t</id>
+                                                        </ref-id>
 
-                                    </subtract>
-                                </actual>
-                            </actuals>
-                        </call>
+                                                    </e1>
+                                                    <e2>
+                                                        <int-literal>
+                                                            <num>1</num>
+                                                        </int-literal>
+                                                    </e2>
+
+                                                </subtract>
+                                            </actual>
+                                        </actuals>
+                                    </call>
+                                </rv>
+                            </assign>
+
+                                    </statements>
+                                </block>
+                            </thencase>
+                            <elsecase>
+                                <block>
+                                    <statements>
+                                         <sysout>
+                                            <arg>
+                                                <int-literal>
+                                                    <num>-17</num>
+                                                </int-literal>
+                                            </arg>
+                                        </sysout>
+                                   </statements>
+                                </block>
+                            </elsecase>
+
+                        </if>
 
                     </body>
                     <ret>
