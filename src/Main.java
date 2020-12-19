@@ -1,5 +1,6 @@
 import ast.*;
 import ast.llvm_formatting.AstLLVMFormatVisitor;
+import ast.semantic_checks.AstSemanticChecksVisitor;
 
 import java.io.*;
 
@@ -34,6 +35,10 @@ public class Main {
                     outFile.write(astPrinter.getString());
 
                 } else if (action.equals("semantic")) {
+                    AstSemanticChecksVisitor astSemChk = new AstSemanticChecksVisitor(prog);
+                    astSemChk.visit(prog);
+                    outFile.write(astSemChk.getString());
+
                     throw new UnsupportedOperationException("TODO - Ex. 3");
 
                 } else if (action.equals("compile")) {
