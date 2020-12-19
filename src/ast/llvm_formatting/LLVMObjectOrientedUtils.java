@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 public class LLVMObjectOrientedUtils {
 
     Map<String, Map<String, MethodData>> classToMethodsMapping;
-    Map<String, Map<String, VarDecl>> classToFieldsMapping;
+    Map<String, Map<String, FieldData>> classToFieldsMapping;
 
     public static class MethodData {
         String declaringClass;
@@ -45,6 +45,16 @@ public class LLVMObjectOrientedUtils {
         }
     }
 
+    public static class FieldData {
+        final VarDecl varDecl;
+        final int index;
+
+        private FieldData(VarDecl varDecl, int index) {
+            this.varDecl = varDecl;
+            this.index = index;
+        }
+    }
+
     public LLVMObjectOrientedUtils(Program program) {
         classToMethodsMapping = createClassToMethodsMapping(program);
         classToFieldsMapping = createClassToFieldsMapping(program);
@@ -53,20 +63,23 @@ public class LLVMObjectOrientedUtils {
     public int getFieldOffset(String className, String fieldName) {
         // The first field of each class starts at offset 8, since the first 8 bytes are the reference to the V-table
         int offset = 8;
-        List<String> sortedFields = new ArrayList<>(classToFieldsMapping.get(className).keySet());
-        Collections.sort(sortedFields);
-        for (String field : sortedFields) {
-            if (field.equals(fieldName))
+
+        List<FieldData> sortedFields = classToFieldsMapping.get(className).values().stream()
+                .sorted(Comparator.comparing((fieldData) -> fieldData.index))
+                .collect(Collectors.toList());
+
+        for (var field : sortedFields) {
+            if (field.varDecl.name().equals(fieldName))
                 return offset;
 
-            offset += typeToSize(classToFieldsMapping.get(className).get(field).type());
+            offset += typeToSize(field.varDecl.type());
         }
 
         return offset;
     }
 
     public AstType getFieldType(String className, String fieldName) {
-        return classToFieldsMapping.get(className).get(fieldName).type();
+        return classToFieldsMapping.get(className).get(fieldName).varDecl.type();
     }
 
     public int getMethodIndex(String className, String methodName) {
@@ -132,11 +145,11 @@ public class LLVMObjectOrientedUtils {
         return classToMethodsMapping;
     }
 
-    private Map<String, Map<String, VarDecl>> createClassToFieldsMapping(Program program) {
+    private Map<String, Map<String, FieldData>> createClassToFieldsMapping(Program program) {
         /* Creating a mapping between each class in the program to its fields, while taking inheritance into account. */
-        Map<String, Map<String, VarDecl>> classToFieldsMapping = new HashMap<>();
+        Map<String, Map<String, FieldData>> classToFieldsMapping = new HashMap<>();
 
-        Map<String, VarDecl> classFields;
+        Map<String, FieldData> classFields;
         for (ClassDecl classNode : program.classDecls()) {
             classFields = new HashMap<>();
 
@@ -145,8 +158,9 @@ public class LLVMObjectOrientedUtils {
                 classFields.putAll(classToFieldsMapping.get(classNode.superName()));
             }
 
+            int index = classFields.size();
             for (VarDecl field : classNode.fields()) {
-                classFields.put(field.name(), field);
+                classFields.put(field.name(), new FieldData(field, index++));
             }
 
             classToFieldsMapping.put(classNode.name(), classFields);
