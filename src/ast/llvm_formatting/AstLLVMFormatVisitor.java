@@ -59,7 +59,7 @@ public class AstLLVMFormatVisitor implements Visitor {
             formatter.format("@.%s_vtable = global [%d x i8*] [", className, tableSize);
             if (tableSize == 0) {
                 formatter.format("]\n");
-                return;
+                continue;
             }
 
             else if (tableSize > 1) {
