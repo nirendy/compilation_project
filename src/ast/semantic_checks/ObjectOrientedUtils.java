@@ -69,6 +69,10 @@ public class ObjectOrientedUtils {
         return classToFieldsMapping.get(className).get(fieldName).type();
     }
 
+    public boolean hasField(String className, String fieldName) {
+        return classToFieldsMapping.get(className).containsKey(fieldName);
+    }
+
     public int getMethodIndex(String className, String methodName) {
         return classToMethodsMapping.get(className).get(methodName).index;
     }
@@ -97,6 +101,10 @@ public class ObjectOrientedUtils {
 
         // The type is of a reference
         return 8;
+    }
+
+    public boolean hasClass(String className) {
+        return classToFieldsMapping.containsKey(className);
     }
 
     private Map<String, Map<String, MethodData>> createClassToMethodsMapping(Program program) {
@@ -160,34 +168,5 @@ public class ObjectOrientedUtils {
         return methodsMapping.values().stream()
                 .sorted(Comparator.comparing((methodData) -> methodData.index))
                 .collect(Collectors.toList());
-    }
-
-    public Formatter getVTablesFormatter() {
-        Formatter formatter = new Formatter();
-
-        Map<String, String> methodsFormatting;
-        MethodData methodData;
-        int tableSize;
-        for (String className : classToMethodsMapping.keySet()) {
-            tableSize = classToMethodsMapping.get(className).size();
-            formatter.format("@.%s_vtable = global [%d x i8*] [", className, tableSize);
-
-            methodsFormatting = new HashMap<>();
-            for (String methodName : classToMethodsMapping.get(className).keySet()) {
-                methodData = classToMethodsMapping.get(className).get(methodName);
-                methodsFormatting.put(Integer.toString(methodData.index),
-                        String.format("i8* bitcast (i32 (i8*, i32)* @%s.%s to i8*)", className, methodName));
-
-            }
-            for (int index = 0; index < tableSize; index++) {
-                formatter.format(methodsFormatting.get(Integer.toString(index)));
-                if (index < tableSize - 1)
-                    formatter.format(", ");
-            }
-
-            formatter.format("]\n");
-        }
-
-        return formatter;
     }
 }
