@@ -14,6 +14,7 @@ public class AstSemanticChecksVisitor implements Visitor {
     private final ObjectOrientedUtils OOUtils;
     private final SemanticChecksUtils SCUtils;
     private HashMap<String, AstType> methodVariableTypes;
+    private HashMap<String, InitializationState> methodVariablesInitializationStates;
     private final Stack<AstType> typesStack = new Stack<>();
     Map<String, Set<String>> classToSuperClasses = new HashMap<>();
 
@@ -203,6 +204,7 @@ public class AstSemanticChecksVisitor implements Visitor {
     public void visit(MethodDecl methodDecl) {
         currentMethod = methodDecl.name();
         methodVariableTypes = new HashMap<>();
+        methodVariablesInitializationStates = new HashMap<>();
 
         // TODO: 24: make sure no variable redeclaration (for formals and for locals)
         for (var formal : methodDecl.formals()) {
@@ -277,6 +279,7 @@ public class AstSemanticChecksVisitor implements Visitor {
         }
 
         methodVariableTypes.put(varDecl.name(), typesStack.pop());
+        methodVariablesInitializationStates.put(varDecl.name(), InitializationState.UNINITIALIZED);
     }
 
     @Override
@@ -287,6 +290,21 @@ public class AstSemanticChecksVisitor implements Visitor {
                 return;
             }
         }
+    }
+
+    private HashMap<String, InitializationState> getMethodVariablesInitializationStatesCopy() {
+        return new HashMap<>(this.methodVariablesInitializationStates);
+    }
+
+    private HashMap<String, InitializationState> joinMethodVariablesInitializationStates(
+            HashMap<String, InitializationState> states1, HashMap<String, InitializationState> states2) {
+        HashMap<String, InitializationState> joined = new HashMap<>();
+        for (var variableName: states1.keySet()) {
+            joined.put(variableName,
+                    SCUtils.joinInitializationStates(states1.get(variableName), states2.get(variableName)));
+        }
+
+        return joined;
     }
 
     @Override
@@ -307,17 +325,27 @@ public class AstSemanticChecksVisitor implements Visitor {
             return;
         }
 
+        HashMap<String, InitializationState> originalMethodVariablesInitializationStates =
+                getMethodVariablesInitializationStatesCopy();
+
         // then case
         ifStatement.thencase().accept(this);
         if (!this.isValid) {
             return;
         }
+        HashMap<String, InitializationState> thenMethodVariablesInitializationStates =
+                getMethodVariablesInitializationStatesCopy();
 
+
+        this.methodVariablesInitializationStates = originalMethodVariablesInitializationStates;
         // else case
         ifStatement.elsecase().accept(this);
         if (!this.isValid) {
             return;
         }
+
+        this.methodVariablesInitializationStates = joinMethodVariablesInitializationStates(
+                thenMethodVariablesInitializationStates, this.methodVariablesInitializationStates);
     }
 
     @Override
@@ -337,8 +365,17 @@ public class AstSemanticChecksVisitor implements Visitor {
             return;
         }
 
+        HashMap<String, InitializationState> originalMethodVariablesInitializationStates =
+                getMethodVariablesInitializationStatesCopy();
+
         // while body
         whileStatement.body().accept(this);
+        if (!this.isValid) {
+            return;
+        }
+
+        this.methodVariablesInitializationStates = joinMethodVariablesInitializationStates(
+                originalMethodVariablesInitializationStates, this.methodVariablesInitializationStates);
     }
 
     @Override
@@ -364,6 +401,10 @@ public class AstSemanticChecksVisitor implements Visitor {
         } else {
             setInvalid(String.format("Reference to undefined name '%s'", lv));
             return;
+        }
+
+        if (methodVariablesInitializationStates.containsKey(lv)) {
+            methodVariablesInitializationStates.put(lv, InitializationState.INITIALIZED);
         }
     }
 
@@ -726,6 +767,13 @@ public class AstSemanticChecksVisitor implements Visitor {
             classOfCalledMethod = ((RefType) type).id();
         }
 
+        // Check that local vars are initialized before use
+        if (methodVariablesInitializationStates.containsKey(e.id())) {
+            if (methodVariablesInitializationStates.get(e.id()) != InitializationState.INITIALIZED) {
+                setInvalid(String.format("Reference to uninitialized variable '%s'", e.id()));
+                return;
+            }
+        }
         typesStack.push(type);
     }
 
