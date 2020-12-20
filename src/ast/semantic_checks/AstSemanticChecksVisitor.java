@@ -15,7 +15,7 @@ public class AstSemanticChecksVisitor implements Visitor {
     private final SemanticChecksUtils SCUtils;
     private HashMap<String, AstType> methodVariableTypes;
     private final Stack<AstType> typesStack = new Stack<>();
-    Map<String, Set<String>> classToSuperClasses;
+    Map<String, Set<String>> classToSuperClasses = new HashMap<>();
 
     public AstSemanticChecksVisitor(Program program) {
         OOUtils = new ObjectOrientedUtils(program);
@@ -43,7 +43,9 @@ public class AstSemanticChecksVisitor implements Visitor {
         this.isValid = true;
 
         program.mainClass().accept(this);
-
+        if (!this.isValid) {
+            return;
+        }
 
         // TODO: 3: making sure the same name cannot be used for 2 classes (including main)
         HashSet<String> classNames = new HashSet<>();
@@ -60,29 +62,38 @@ public class AstSemanticChecksVisitor implements Visitor {
             }
 
             classDecl.accept(this);
+            if (!this.isValid) {
+                return;
+            }
         }
     }
 
     private boolean isSubClass(String subClassName, String parentClassName) {
+        if (subClassName.equals(parentClassName)) {
+            return true;
+        }
         return this.classToSuperClasses.get(subClassName).contains(parentClassName);
     }
 
     private void updateClassToSuperClasses(ClassDecl classDecl) {
-        if (classDecl.superName() != null) {
-            if (!this.classToSuperClasses.containsKey(classDecl.superName())) {
-                setInvalid(String.format("Superclass '%s' must be declared before extending class '%s'",
-                        classDecl.superName(), classDecl.name()));
-                return;
-            }
-
-            HashSet<String> superClasses = new HashSet<>(this.classToSuperClasses.get(classDecl.superName()));
-            if (superClasses.contains(classDecl.name())) {
-                setInvalid(String.format("Class '%s' extends itself", classDecl.name()));
-                return;
-            }
-
-            this.classToSuperClasses.put(classDecl.name(), superClasses);
+        if (classDecl.superName() == null) {
+            this.classToSuperClasses.put(classDecl.name(), new HashSet<>());
+            return;
         }
+
+        if (!this.classToSuperClasses.containsKey(classDecl.superName())) {
+            setInvalid(String.format("Superclass '%s' must be declared before extending class '%s'",
+                    classDecl.superName(), classDecl.name()));
+            return;
+        }
+
+        HashSet<String> superClasses = new HashSet<>(this.classToSuperClasses.get(classDecl.superName()));
+        if (superClasses.contains(classDecl.name())) {
+            setInvalid(String.format("Class '%s' extends itself", classDecl.name()));
+            return;
+        }
+
+        this.classToSuperClasses.put(classDecl.name(), superClasses);
     }
 
     @Override
@@ -94,7 +105,7 @@ public class AstSemanticChecksVisitor implements Visitor {
         }
 
         // TODO: 2: make sure main class cannot be extended
-        if (classDecl.superName().equals(this.mainClassName)) {
+        if (classDecl.superName() != null && classDecl.superName().equals(this.mainClassName)) {
             setInvalid(String.format("The main class (class '%s') cannot be extended", this.mainClassName));
             return;
         }
@@ -155,6 +166,9 @@ public class AstSemanticChecksVisitor implements Visitor {
             }
 
             methodDecl.accept(this);
+            if (!this.isValid) {
+                return;
+            }
         }
 
         // TODO: 4: same field is not used twice (including sub_classes)
@@ -174,6 +188,9 @@ public class AstSemanticChecksVisitor implements Visitor {
             }
 
             fieldDecl.accept(this);
+            if (!this.isValid) {
+                return;
+            }
         }
     }
 
@@ -190,12 +207,21 @@ public class AstSemanticChecksVisitor implements Visitor {
         // TODO: 24: make sure no variable redeclaration (for formals and for locals)
         for (var formal : methodDecl.formals()) {
             formal.accept(this);
+            if (!this.isValid) {
+                return;
+            }
         }
         for (var varDecl : methodDecl.vardecls()) {
             varDecl.accept(this);
+            if (!this.isValid) {
+                return;
+            }
         }
         for (var stmt : methodDecl.body()) {
             stmt.accept(this);
+            if (!this.isValid) {
+                return;
+            }
         }
 
         // TODO: 18: make sure that the return type is correct
@@ -206,17 +232,12 @@ public class AstSemanticChecksVisitor implements Visitor {
 
         AstType retExpType = typesStack.pop();
 
-        if (methodDecl.returnType() instanceof RefType) {
-            if (!(retExpType instanceof RefType)) {
-                setInvalid("The static type of e in 'return e' must match the method's return type");
-                return;
-            } else if (!isSubClass(((RefType) retExpType).id(), ((RefType) methodDecl.returnType()).id())) {
-                setInvalid("The static type of e in 'return e' is not a subtype of the method's return type");
-                return;
-            }
-        } else {
-            if (retExpType.getClass() != methodDecl.returnType().getClass()) {
-                setInvalid("The static type of e in 'return e' must match the method's return type");
+        if (retExpType.getClass() != methodDecl.returnType().getClass()) {
+            setInvalid(String.format("In method %s, the static type of e in 'return e' must match the method's return type", methodDecl.name()));
+            return;
+        } else if (methodDecl.returnType() instanceof RefType) {
+            if (!isSubClass(((RefType) retExpType).id(), ((RefType) methodDecl.returnType()).id())) {
+                setInvalid(String.format("In method %s, the static type of e in 'return e' is not a subtype of the method's return type", methodDecl.name()));
                 return;
             }
         }
@@ -364,17 +385,12 @@ public class AstSemanticChecksVisitor implements Visitor {
 
         AstType rvType = typesStack.pop();
 
-        if (lvType instanceof RefType) {
-            if (!(rvType instanceof RefType)) {
+        if (rvType.getClass() != lvType.getClass()) {
+            setInvalid("Assignment (x = a) statement got non-matching types");
+            return;
+        } else if (rvType instanceof RefType) {
+            if (!isSubClass(((RefType) rvType).id(), ((RefType) lvType).id())) {
                 setInvalid("Assignment (x = a) statement got non-matching types (one is not a subtype of the other)");
-                return;
-            } else if (!isSubClass(((RefType) rvType).id(), ((RefType) lvType).id())) {
-                setInvalid("Assignment (x = a) statement got non-matching types (one is not a subtype of the other)");
-                return;
-            }
-        } else {
-            if (rvType.getClass() != lvType.getClass()) {
-                setInvalid("Assignment (x = a) statement got non-matching types");
                 return;
             }
         }
