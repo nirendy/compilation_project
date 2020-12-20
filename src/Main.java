@@ -39,8 +39,6 @@ public class Main {
                     astSemChk.visit(prog);
                     outFile.write(astSemChk.getString());
 
-                    throw new UnsupportedOperationException("TODO - Ex. 3");
-
                 } else if (action.equals("compile")) {
                     AstLLVMFormatVisitor LLVMFormatter = new AstLLVMFormatVisitor(prog);
                     LLVMFormatter.visit(prog);
