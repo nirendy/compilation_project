@@ -605,7 +605,6 @@ public class AstSemanticChecksVisitor implements Visitor {
         // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
         // TODO: 15: make sure use of variables are already initlialized
         // TODO: 21: make sure that the args of the expression in the correct type
-        // TODO: 11: not fully understand make sure tat the
         // TODO: 18: make sure that the return type is correct
 
         // TODO: 12: must be called from this, new, local var, formal or field
@@ -626,38 +625,41 @@ public class AstSemanticChecksVisitor implements Visitor {
             return;
         }
 
-        String ownerReg = exprResults.pop();
-
-        // bitcast to pointer to the vtable
-        // String vtablePtrReg = nextAnonymousReg();
-        // formatIndented("%s = bitcast i8* %s to i8***\n", vtablePtrReg, ownerReg);
-
-        // load the vtable
-        // String vtableReg = nextAnonymousReg();
-        // formatIndented("%s = load i8**, i8*** %s\n", vtableReg, vtablePtrReg);
-
-        // get a pointer to the method's element in the vtable
-        // String methodElementReg = nextAnonymousReg();
-        int methodIndex = OOUtils.getMethodIndex(classOfCalledMethod, e.methodId());
-        // formatIndented("%s = getelementptr i8*, i8** %s, i32 %d\n", methodElementReg, vtableReg, methodIndex);
-
-        // load element to get the pointer to the method
-        // String tempMethodPtrReg = nextAnonymousReg();
-        // formatIndented("%s = load i8*, i8** %s\n", tempMethodPtrReg, methodElementReg);
-
-        AstType returnType = OOUtils.getMethodReturnType(classOfCalledMethod, e.methodId());
-        List<AstType> formalArgsTypes = OOUtils.getMethodFormalArgsTypes(classOfCalledMethod, e.methodId());
-
-        // make method call
-
-        for (var actual : e.actuals()) {
-            actual.accept(this);
-            // actualValues.add(exprResults.pop());
+        // TODO: 11: check method exists for the class of the owner expr, and that actual args match formal args
+        // Check method exists for class
+        if (!OOUtils.hasMethod(classOfCalledMethod, e.methodId())) {
+            setInvalid(String.format("Method %s doesn't exist in class class %s", e.methodId(), classOfCalledMethod));
+            return;
         }
 
-        // e.ownerExpr();
+        // Check number of args match between call and declaration
+        List<AstType> formalArgsTypes = OOUtils.getMethodFormalArgsTypes(classOfCalledMethod, e.methodId());
+        if (formalArgsTypes.size() != e.actuals().size()) {
+            setInvalid(String.format("Method %s of class %s called with wrong number of arguments", e.methodId(), classOfCalledMethod));
+            return;
+        }
 
-        // e.methodId();
+        // Check types of args match between call and declaration
+        for (int i = 0; i < formalArgsTypes.size(); i++) {
+            e.actuals().get(i).accept(this);
+            if (!this.isValid) {
+                return;
+            }
+
+            AstType actualType = typesStack.pop();
+            AstType formalArgType = formalArgsTypes.get(i);
+            if (actualType.getClass() != formalArgType.getClass()) {
+                setInvalid(String.format("Method %s of class %s called with wrong type of argument",
+                        e.methodId(), classOfCalledMethod));
+                return;
+            } else if (actualType instanceof RefType) {
+                if (!isSubClass(((RefType) actualType).id(), ((RefType) formalArgType).id())) {
+                    setInvalid(String.format("Method %s of class %s called with wrong type of argument",
+                        e.methodId(), classOfCalledMethod));
+                    return;
+                }
+            }
+        }
 
         typesStack.push(OOUtils.getMethodReturnType(classOfCalledMethod, e.methodId()));
     }
