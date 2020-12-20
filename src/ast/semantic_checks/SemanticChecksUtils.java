@@ -17,4 +17,12 @@ public class SemanticChecksUtils {
     public boolean isValidOwnerExpressionType(Expr ownerExpr) {
         return methodCallOwnerExprTypes.contains(ownerExpr.getClass());
     }
+
+    public InitializationState joinInitializationStates(InitializationState state1, InitializationState state2) {
+        if (state1 == state2) {
+            return state1;
+        } else {
+            return InitializationState.UNKNOWN;
+        }
+    }
 }
