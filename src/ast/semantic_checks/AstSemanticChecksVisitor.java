@@ -121,15 +121,19 @@ public class AstSemanticChecksVisitor implements Visitor {
         // TODO (including sub_classes)
         HashSet<String> fieldNames = new HashSet<>();
         for (var fieldDecl : classDecl.fields()) {
-            fieldDecl.accept(this);
-
             String fieldName = fieldDecl.name();
-            if (fieldNames.contains(fieldName)) {
-                setInvalid(String.format("Field Name %s declared more than once in class %s", fieldName, classDecl.name()));
+
+            if (classDecl.superName() != null && OOUtils.hasField(classDecl.superName(), fieldName)) {
+                setInvalid(String.format("Field name %s re-declared in class %s", fieldName, classDecl.name()));
+                return;
+            } else if (fieldNames.contains(fieldName)) {
+                setInvalid(String.format("Field name %s declared more than once in class %s", fieldName, classDecl.name()));
                 return;
             } else {
                 fieldNames.add(fieldName);
             }
+
+            fieldDecl.accept(this);
         }
     }
 
@@ -141,7 +145,6 @@ public class AstSemanticChecksVisitor implements Visitor {
     @Override
     public void visit(MethodDecl methodDecl) {
         // TODO: 18: make sure that the return type is correct
-        // TODO: 24: make sure no variable redeclaration (for formals and for locals)
 
         currentMethod = methodDecl.name();
         methodVariableTypes = new HashMap<>();
@@ -181,6 +184,13 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(FormalArg formalArg) {
+        // TODO: 24: make sure no variable redeclaration (for formals and for locals)
+        if (methodVariableTypes.containsKey(formalArg.name())) {
+            setInvalid(String.format("Formal arg %s declared more than once in method %s of class %s", formalArg.name(),
+                    this.currentMethod, this.currentClass));
+            return;
+        }
+
         // TODO: 8: reference type must be declared in the file
         formalArg.type().accept(this);
         if (!this.isValid) {
@@ -192,6 +202,13 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(VarDecl varDecl) {
+        // TODO: 24: make sure no variable redeclaration (for formals and for locals)
+        if (methodVariableTypes.containsKey(varDecl.name())) {
+            setInvalid(String.format("Local variable %s re-declared in method %s of class %s", varDecl.name(),
+                    this.currentMethod, this.currentClass));
+            return;
+        }
+
         // TODO: 8: reference type must be declared in the file
         varDecl.type().accept(this);
         if (!this.isValid) {
