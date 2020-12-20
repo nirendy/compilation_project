@@ -8,12 +8,13 @@ import java.util.*;
 public class AstSemanticChecksVisitor implements Visitor {
     private boolean isValid = false; // Starts at false. Making sure that the only way it can turn true is it if started at program
     private String currentClass;
+    private String mainClassName;
     private String currentMethod;
     private String classOfCalledMethod;
     private final ObjectOrientedUtils OOUtils;
     private final SemanticChecksUtils SCUtils;
     private HashMap<String, AstType> methodVariableTypes;
-    private final Stack<String> exprResults = new Stack<>();
+    private final Stack<AstType> typesStack = new Stack<>();
 
     public AstSemanticChecksVisitor(Program program) {
         OOUtils = new ObjectOrientedUtils(program);
@@ -32,65 +33,10 @@ public class AstSemanticChecksVisitor implements Visitor {
         this.isValid = false;
         System.out.println(reason);
     }
-
-    private void formatVTables(Program program) {
-        int tableSize;
-
-        for (ClassDecl classdecl : program.classDecls()) {
-            String className = classdecl.name();
-            List<ObjectOrientedUtils.MethodData> methodsData = OOUtils.getMethodsData(className);
-            tableSize = methodsData.size();
-            if (tableSize == 0) {
-                return;
-            } else if (tableSize > 1) {
-            }
-
-            for (var methodData : methodsData) {
-                methodData.returnType.accept(this);
-                for (var formalArgType : methodData.formalArgsTypes) {
-                    formalArgType.accept(this);
-                }
-
-            }
-
-            if (tableSize > 1) {
-            }
-
-        }
-    }
-
-
-    private AstType formatAssignmentLv(String lv) {
-        String destRegister;
-        AstType lvType;
-
-        if (!methodVariableTypes.containsKey(lv)) {
-            destRegister = lv;
-            lvType = OOUtils.getFieldType(currentClass, lv);
-        } else {
-            destRegister = "%" + lv;
-            lvType = methodVariableTypes.get(lv);
-        }
-
-        exprResults.push(destRegister);
-        return lvType;
-    }
-
-    private void visitArithmeticBinaryExpr(BinaryExpr e, String op) {
-        // Note: we only use this to format arithmetic operations ("+", "-" and "*")
-        // so the return type is always i32.
-        e.e1().accept(this);
-        String value1 = exprResults.pop();
-        e.e2().accept(this);
-        String value2 = exprResults.pop();
-        // String resultReg = nextAnonymousReg();
-        // exprResults.push(resultReg);
-    }
-
+    
 
     @Override
     public void visit(Program program) {
-        formatVTables(program);
 
         // the only place that sets isValid to true
         this.isValid = true;
@@ -100,23 +46,32 @@ public class AstSemanticChecksVisitor implements Visitor {
 
         // TODO: 3: making sure the same name cannot be used for 2 classes (including main)
         HashSet<String> classNames = new HashSet<>();
-        classNames.add("Main");
-        for (ClassDecl classDecl : program.classDecls()) {
-            classDecl.accept(this);
+        this.mainClassName = program.mainClass().name();
 
+        classNames.add(this.mainClassName);
+        for (ClassDecl classDecl : program.classDecls()) {
             String className = classDecl.name();
             if (classNames.contains(className)) {
                 setInvalid(String.format("Class Name %s declared more than once", className));
+                return;
             } else {
                 classNames.add(className);
             }
+
+            classDecl.accept(this);
         }
     }
 
 
     @Override
     public void visit(ClassDecl classDecl) {
-        // TODO: 1: class do not extends itself (circulary)
+        // TODO: 1: class do not extends itself (circularly)
+
+        // TODO: 2: make sure main class cannot be extended
+        if (classDecl.superName().equals(this.mainClassName)) {
+            setInvalid(String.format("The main class (class '%s') cannot be extended", this.mainClassName));
+            return;
+        }
 
         currentClass = classDecl.name();
 
@@ -125,17 +80,18 @@ public class AstSemanticChecksVisitor implements Visitor {
 
         HashSet<String> methodNames = new HashSet<>();
         for (var methodDecl : classDecl.methoddecls()) {
-            methodDecl.accept(this);
-
             String methodName = methodDecl.name();
             if (methodNames.contains(methodName)) {
                 setInvalid(String.format("Method Name %s declared more than once in class %s", methodName, classDecl.name()));
+                return;
             } else {
                 methodNames.add(methodName);
             }
+
+            methodDecl.accept(this);
         }
 
-        // TODO: 4: same field do not used twice (including sub_classes)
+        // TODO: 4: same field is not used twice (including sub_classes)
         // TODO (including sub_classes)
         HashSet<String> fieldNames = new HashSet<>();
         for (var fieldDecl : classDecl.fields()) {
@@ -144,6 +100,7 @@ public class AstSemanticChecksVisitor implements Visitor {
             String fieldName = fieldDecl.name();
             if (fieldNames.contains(fieldName)) {
                 setInvalid(String.format("Field Name %s declared more than once in class %s", fieldName, classDecl.name()));
+                return;
             } else {
                 fieldNames.add(fieldName);
             }
@@ -152,7 +109,6 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(MainClass mainClass) {
-        // TODO: 2: make sure cannot be extended
         mainClass.mainStatement().accept(this);
     }
 
@@ -180,21 +136,32 @@ public class AstSemanticChecksVisitor implements Visitor {
     @Override
     public void visit(FormalArg formalArg) {
         // TODO: 8: reference type must be declared in the file
-
-        methodVariableTypes.put(formalArg.name(), formalArg.type());
         formalArg.type().accept(this);
+        if (!this.isValid) {
+            return;
+        }
+
+        methodVariableTypes.put(formalArg.name(), typesStack.pop());
     }
 
     @Override
     public void visit(VarDecl varDecl) {
         // TODO: 8: reference type must be declared in the file
-        methodVariableTypes.put(varDecl.name(), varDecl.type());
+        varDecl.type().accept(this);
+        if (!this.isValid) {
+            return;
+        }
+
+        methodVariableTypes.put(varDecl.name(), typesStack.pop());
     }
 
     @Override
     public void visit(BlockStatement blockStatement) {
         for (var s : blockStatement.statements()) {
             s.accept(this);
+            if (!this.isValid) {
+                return;
+            }
         }
     }
 
@@ -205,16 +172,28 @@ public class AstSemanticChecksVisitor implements Visitor {
         // TODO: 21: make sure that the args of the expression in the correct type
         // TODO: 17: make sure the expression is bool
 
-        // calculate condition
         ifStatement.cond().accept(this);
-        String condValue = exprResults.pop();
+        if (!this.isValid) {
+            return;
+        }
+
+        AstType type = typesStack.pop();
+        if (!(type instanceof BoolAstType)) {
+            setInvalid("If statement got non-boolean argument for the condition");
+            return;
+        }
 
         // then case
         ifStatement.thencase().accept(this);
+        if (!this.isValid) {
+            return;
+        }
 
         // else case
         ifStatement.elsecase().accept(this);
-
+        if (!this.isValid) {
+            return;
+        }
     }
 
     @Override
@@ -223,9 +202,16 @@ public class AstSemanticChecksVisitor implements Visitor {
         // TODO: 21: make sure that the args of the expression in the correct type
         // TODO: 17: make sure the expression is bool
 
-        // calculate condition
         whileStatement.cond().accept(this);
-        String condValue = exprResults.pop();
+        if (!this.isValid) {
+            return;
+        }
+
+        AstType type = typesStack.pop();
+        if (!(type instanceof BoolAstType)) {
+            setInvalid("While statement got non-boolean argument for the condition");
+            return;
+        }
 
         // while body
         whileStatement.body().accept(this);
@@ -235,27 +221,57 @@ public class AstSemanticChecksVisitor implements Visitor {
     public void visit(SysoutStatement sysoutStatement) {
         // TODO: 20: make sure that the arg is int
         sysoutStatement.arg().accept(this);
-        exprResults.pop();
+        if (!this.isValid) {
+            return;
+        }
+
+        AstType type = typesStack.pop();
+        if (!(type instanceof IntAstType)) {
+            setInvalid("Sysout statement got non-numeric argument");
+            return;
+        }
+    }
+
+    private void visitAssignmentLv(String lv) {
+        if (methodVariableTypes.containsKey(lv)) {
+            typesStack.push(methodVariableTypes.get(lv));
+        } else if (OOUtils.hasField(currentClass, lv)) {  // is a field
+            typesStack.push(OOUtils.getFieldType(currentClass, lv));
+        } else {
+            setInvalid(String.format("Reference to undefined name '%s'", lv));
+            return;
+        }
     }
 
     @Override
     public void visit(AssignStatement assignStatement) {
         // TODO: 16: make sure that the assignment of rv is valid according to lv
-        assignStatement.rv().accept(this);
-        String rv = exprResults.pop();
-
         // TODO: 15: mark lv as assigned (unless in a branch)
         // TODO: 21: make sure that the args of the expression in the correct type
-
-        AstType lvType = formatAssignmentLv(assignStatement.lv());
-        if (!methodVariableTypes.containsKey(assignStatement.lv())) {
-            lvType = OOUtils.getFieldType(currentClass, assignStatement.lv());
-        } else {
-            lvType = methodVariableTypes.get(assignStatement.lv());
+        visitAssignmentLv(assignStatement.lv());
+        if (!this.isValid) {
+            return;
         }
 
-        String destRegister = exprResults.pop();
+        AstType lvType = typesStack.pop();
+        assignStatement.rv().accept(this);
+        if (!this.isValid) {
+            return;
+        }
 
+        AstType rvType = typesStack.pop();
+
+        if (lvType instanceof RefType) {
+            if (!OOUtils.isSubClass(((RefType) rvType).id(), ((RefType) lvType).id())) {
+                setInvalid("Assignment (x = a) statement got non-matching types (one is not a subtype of the other)");
+                return;
+            }
+        } else {
+            if (rvType.getClass() != lvType.getClass()) {
+                setInvalid("Assignment (x = a) statement got non-matching types");
+                return;
+            }
+        }
     }
 
     @Override
@@ -263,54 +279,73 @@ public class AstSemanticChecksVisitor implements Visitor {
         // TODO: 15: make sure the array is initialized
         // TODO: 21: make sure that the args of the expression in the correct type
         // TODO: 23: make sure that the array is int[] and the index is int and the value is int
-        AstType lvType = formatAssignmentLv(assignArrayStatement.lv());
-        String arrayPtrReg = exprResults.pop();
+        visitAssignmentLv(assignArrayStatement.lv());
+        if (!this.isValid) {
+            return;
+        }
+
+        AstType lvType = typesStack.pop();
+        if (!(lvType instanceof IntArrayAstType)) {
+            setInvalid("Array assignment (x[e1] = e2) statement got a non-array argument (as x)");
+            return;
+        }
 
         assignArrayStatement.index().accept(this);
-        String index = exprResults.pop();
+        if (!this.isValid) {
+            return;
+        }
 
-        // load the address to the array
-
-        // get pointer to array element
-        String elementPtrReg = exprResults.pop();
+        AstType indexType = typesStack.pop();
+        if (!(indexType instanceof IntAstType)) {
+            setInvalid("Array assignment (x[e1] = e2) statement got a non-numeric argument (as e1)");
+            return;
+        }
 
         assignArrayStatement.rv().accept(this);
-        String rv = exprResults.pop();
+        if (!this.isValid) {
+            return;
+        }
 
+        AstType rvType = typesStack.pop();
+        if (!(rvType instanceof IntAstType)) {
+            setInvalid("Array assignment (x[e1] = e2) statement got a non-numeric argument (as e2)");
+            return;
+        }
     }
 
-    // private void visitArithmeticBinaryExpr(BinaryExpr e, String op) {
-    //     // Note: we only use this to format arithmetic operations ("+", "-" and "*")
-    //     // so the return type is always i32.
-    //     e.e1().accept(this);
-    //     String value1 = exprResults.pop();
-    //     e.e2().accept(this);
-    //     String value2 = exprResults.pop();
-    //     String resultReg = nextAnonymousReg();
-    //     formatIndented("%s = %s i32 %s, %s\n", resultReg, op, value1, value2);
-    //     exprResults.push(resultReg);
-    // }
+    private void visitBooleanBinaryExpr(BinaryExpr e, String op) {
+        // Note: we only use this to check boolean operations ("&&" and ">")
+        // so the argument types are always boolean.
+        e.e1().accept(this);
+        if (!this.isValid) {
+            return;
+        }
+
+        AstType type1 = typesStack.pop();
+        e.e2().accept(this);
+        if (!this.isValid) {
+            return;
+        }
+
+        AstType type2 = typesStack.pop();
+
+        if (!(type1 instanceof BoolAstType) || !(type2 instanceof BoolAstType)) {
+            setInvalid(String.format("%s op got non-boolean arguments", op));
+            return;
+        }
+    }
 
     @Override
     public void visit(AndExpr e) {
         // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
         // TODO: 15: make sure use of variables are already initlialized
         // TODO: 21: make sure that the args of the expression in the correct type
+        visitBooleanBinaryExpr(e, "And (&&)");
+        if (!this.isValid) {
+            return;
+        }
 
-        // calculate first expression
-        e.e1().accept(this);
-        String value1 = exprResults.pop();
-
-        // check first expression's result
-
-        // calculate second expression's result
-        e.e2().accept(this);
-        String value2 = exprResults.pop();
-
-        // jump to the result calculation
-
-        // calculate result (based on the label that we got here from)
-        // exprResults.push();
+        typesStack.push(new BoolAstType());
     }
 
     @Override
@@ -318,11 +353,12 @@ public class AstSemanticChecksVisitor implements Visitor {
         // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
         // TODO: 15: make sure use of variables are already initlialized
         // TODO: 21: make sure that the args of the expression in the correct type
-        e.e1().accept(this);
-        String value1 = exprResults.pop();
-        e.e2().accept(this);
-        String value2 = exprResults.pop();
-        // exprResults.push(resultReg);
+        visitBooleanBinaryExpr(e, "Lt (<)");
+        if (!this.isValid) {
+            return;
+        }
+
+        typesStack.push(new BoolAstType());
     }
 
     @Override
@@ -331,8 +367,39 @@ public class AstSemanticChecksVisitor implements Visitor {
         // TODO: 15: make sure use of variables are already initlialized
         // TODO: 21: make sure that the args of the expression in the correct type
         e.e().accept(this);
-        exprResults.pop();
-        // exprResults.push(resultReg);
+        if (!this.isValid) {
+            return;
+        }
+
+        AstType type = typesStack.pop();
+        if (!(type instanceof BoolAstType)) {
+            setInvalid("Not (!) op got non-boolean argument");
+            return;
+        }
+
+        typesStack.push(new BoolAstType());
+    }
+
+    private void visitArithmeticBinaryExpr(BinaryExpr e, String op) {
+        // Note: we only use this to check arithmetic operations ("+", "-" and "*")
+        // so the argument types are always int.
+        e.e1().accept(this);
+        if (!this.isValid) {
+            return;
+        }
+
+        AstType type1 = typesStack.pop();
+        e.e2().accept(this);
+        if (!this.isValid) {
+            return;
+        }
+
+        AstType type2 = typesStack.pop();
+
+        if (!(type1 instanceof IntAstType) || !(type2 instanceof IntAstType)) {
+            setInvalid(String.format("%s op got non-numeric arguments", op));
+            return;
+        }
     }
 
     @Override
@@ -340,7 +407,12 @@ public class AstSemanticChecksVisitor implements Visitor {
         // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
         // TODO: 15: make sure use of variables are already initlialized
         // TODO: 21: make sure that the args of the expression in the correct type
-        visitArithmeticBinaryExpr(e, "add");
+        visitArithmeticBinaryExpr(e, "Add (+)");
+        if (!this.isValid) {
+            return;
+        }
+
+        typesStack.push(new IntAstType());
     }
 
     @Override
@@ -348,7 +420,12 @@ public class AstSemanticChecksVisitor implements Visitor {
         // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
         // TODO: 15: make sure use of variables are already initlialized
         // TODO: 21: make sure that the args of the expression in the correct type
-        visitArithmeticBinaryExpr(e, "sub");
+        visitArithmeticBinaryExpr(e, "Subtract (-)");
+        if (!this.isValid) {
+            return;
+        }
+
+        typesStack.push(new IntAstType());
     }
 
     @Override
@@ -356,7 +433,12 @@ public class AstSemanticChecksVisitor implements Visitor {
         // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
         // TODO: 15: make sure use of variables are already initlialized
         // TODO: 21: make sure that the args of the expression in the correct type
-        visitArithmeticBinaryExpr(e, "mul");
+        visitArithmeticBinaryExpr(e, "Mult (*)");
+        if (!this.isValid) {
+            return;
+        }
+
+        typesStack.push(new IntAstType());
     }
 
     @Override
@@ -366,15 +448,28 @@ public class AstSemanticChecksVisitor implements Visitor {
         // TODO: 21: make sure that the args of the expression in the correct type
         // TODO: 22: make sure that the array is int[] and the index is int
         e.arrayExpr().accept(this);
-        String arrayPtrReg = exprResults.pop();
+        if (!this.isValid) {
+            return;
+        }
+
+        AstType arrayType = typesStack.pop();
+        if (!(arrayType instanceof IntArrayAstType)) {
+            setInvalid("Array access (x[e]) op got a non-array argument (for x in the x[e])");
+            return;
+        }
 
         e.indexExpr().accept(this);
-        String index = exprResults.pop();
+        if (!this.isValid) {
+            return;
+        }
 
-        String elementPtrReg = exprResults.pop();
-        // load element to get the value
+        AstType indexType = typesStack.pop();
+        if (!(indexType instanceof IntAstType)) {
+            setInvalid("Array access (x[e]) op got a non-numeric argument (for e in the x[e])");
+            return;
+        }
 
-        // exprResults.push(elementValueReg);
+        typesStack.push(new IntAstType());
     }
 
 
@@ -384,15 +479,18 @@ public class AstSemanticChecksVisitor implements Visitor {
         // TODO: 15: make sure use of variables are already initlialized
         // TODO: 21: make sure that the args of the expression in the correct type
         // TODO: 13: static type of which it invokes is int[]
-
         e.arrayExpr().accept(this);
-        String elementPtrReg = exprResults.pop();
+        if (!this.isValid) {
+            return;
+        }
 
-        // load element pointer to get the value
-        // String elementValueReg = nextAnonymousReg();
-        // formatIndented("%s = load i32, i32* %s\n", elementValueReg, elementPtrReg);
-        //
-        // exprResults.push(elementValueReg);
+        AstType arrayType = typesStack.pop();
+        if (!(arrayType instanceof IntArrayAstType)) {
+            setInvalid("Array length (x.length) op got a non-array argument");
+            return;
+        }
+
+        typesStack.push(new IntAstType());
     }
 
 
@@ -440,6 +538,7 @@ public class AstSemanticChecksVisitor implements Visitor {
 
         // e.methodId();
 
+        typesStack.push(OOUtils.getMethodReturnType(classOfCalledMethod, e.methodId()));
     }
 
     @Override
@@ -447,7 +546,7 @@ public class AstSemanticChecksVisitor implements Visitor {
         // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
         // TODO: 15: make sure use of variables are already initlialized
         // TODO: 21: make sure that the args of the expression in the correct type
-        exprResults.push(Integer.toString(e.num()));
+        typesStack.push(new IntAstType());
     }
 
     @Override
@@ -455,7 +554,7 @@ public class AstSemanticChecksVisitor implements Visitor {
         // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
         // TODO: 15: make sure use of variables are already initlialized
         // TODO: 21: make sure that the args of the expression in the correct type
-        exprResults.push("1");
+        typesStack.push(new BoolAstType());
     }
 
     @Override
@@ -463,21 +562,23 @@ public class AstSemanticChecksVisitor implements Visitor {
         // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
         // TODO: 15: make sure use of variables are already initlialized
         // TODO: 21: make sure that the args of the expression in the correct type
-        exprResults.push("0");
+        typesStack.push(new BoolAstType());
     }
 
     @Override
     public void visit(IdentifierExpr e) {
-        // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
+        // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current 
+        //  method or to a field defined in the same class of supercalss
         // TODO: 15: make sure use of variables are already initlialized
         // TODO: 21: make sure that the args of the expression in the correct type
-        String identifierReg;
         AstType type;
-        if (!methodVariableTypes.containsKey(e.id())) {
+        if (methodVariableTypes.containsKey(e.id())) {
+            type = methodVariableTypes.get(e.id());
+        } else if (OOUtils.hasField(currentClass, e.id())) {  // is a field
             type = OOUtils.getFieldType(currentClass, e.id());
         } else {
-            identifierReg = "%" + e.id();
-            type = methodVariableTypes.get(e.id());
+            setInvalid(String.format("Reference to undefined name '%s'", e.id()));
+            return;
         }
 
         // In case we got here from a method call expression (as the owner expression),
@@ -486,9 +587,7 @@ public class AstSemanticChecksVisitor implements Visitor {
             classOfCalledMethod = ((RefType) type).id();
         }
 
-        // Load value referenced by the identifierReg
-        // exprResults.push(valueReg);
-
+        typesStack.push(type);
     }
 
     public void visit(ThisExpr e) {
@@ -499,7 +598,7 @@ public class AstSemanticChecksVisitor implements Visitor {
         // save the class name to classOfCalledMethod
         classOfCalledMethod = currentClass;
 
-        exprResults.push("%this");
+        typesStack.push(new RefType(currentClass));
     }
 
     @Override
@@ -508,14 +607,17 @@ public class AstSemanticChecksVisitor implements Visitor {
         // TODO: 15: make sure use of variables are already initlialized
         // TODO: 21: make sure that the args of the expression in the correct type
         e.lengthExpr().accept(this);
-        String arrayLength = exprResults.pop();
+        if (!this.isValid) {
+            return;
+        }
 
-        // format array length validation
-        e.lengthExpr();
+        AstType lengthType = typesStack.pop();
+        if (!(lengthType instanceof IntAstType)) {
+            setInvalid("New array op got a non-numeric argument for the array length");
+            return;
+        }
 
-        // calculate array size
-
-        // allocate new array, and store arrayLen in the first cell
+        typesStack.push(new IntArrayAstType());
     }
 
     @Override
@@ -524,36 +626,40 @@ public class AstSemanticChecksVisitor implements Visitor {
         // TODO: 15: make sure use of variables are already initlialized
         // TODO: 21: make sure that the args of the expression in the correct type
         // TODO: 9: new must be declared in the file
+        if (!OOUtils.hasClass(e.classId())) {
+            setInvalid((String.format("New object type '%s' was not declared in the program", e.classId())));
+            return;
+        }
 
-        e.classId();
-
-        OOUtils.getInstanceSize(e.classId());
-        int numOfMethods = OOUtils.getNumberOfMethods(e.classId());
-        // numOfMethods
-
+        typesStack.push(new RefType(e.classId()));
+        
         // In case we got here from a method call expression (as the owner expression),
         // save the class name to classOfCalledMethod
         classOfCalledMethod = e.classId();
-
-        // exprResults.push(instanceReg);
     }
 
     @Override
     public void visit(IntAstType t) {
+        typesStack.push(t);
     }
 
     @Override
     public void visit(BoolAstType t) {
-
+        typesStack.push(t);
     }
 
     @Override
     public void visit(IntArrayAstType t) {
-
+        typesStack.push(t);
     }
 
     @Override
     public void visit(RefType t) {
         // TODO: 8: reference type must be declared in the file
+        if (!OOUtils.hasClass(t.id())) {
+            setInvalid((String.format("Reference type '%s' was not declared in the program", t.id())));
+            return;
+        }
+        typesStack.push(t);
     }
 }
