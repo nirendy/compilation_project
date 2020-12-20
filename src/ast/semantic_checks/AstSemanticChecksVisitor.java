@@ -101,14 +101,54 @@ public class AstSemanticChecksVisitor implements Visitor {
 
         currentClass = classDecl.name();
 
-        // TODO: 5: the same method can not be in the same class
         // TODO: 6: if a method is overridden - same number of args, same static types, a covariant static return type)
-
+        // TODO: 5: the same method can not be in the same class
         HashSet<String> methodNames = new HashSet<>();
         for (var methodDecl : classDecl.methoddecls()) {
             String methodName = methodDecl.name();
+            if (classDecl.superName() != null && OOUtils.hasMethod(classDecl.superName(), methodName)) {
+                // Check same number of args
+                List<AstType> superFormalArgsTypes = OOUtils.getMethodFormalArgsTypes(classDecl.superName(), methodName);
+                if (superFormalArgsTypes.size() != methodDecl.formals().size()) {
+                    setInvalid(String.format("Overriding method %s in class %s with the wrong number of formal arguments",
+                            methodName, classDecl.name()));
+                    return;
+                }
+
+                // Check same static types
+                for (int i = 0; i < superFormalArgsTypes.size(); i++) {
+                    AstType superFormalArgType = superFormalArgsTypes.get(i);
+                    AstType formalArgType = methodDecl.formals().get(i).type();
+                    if (superFormalArgType.getClass() != formalArgType.getClass()) {
+                        setInvalid(String.format("Overriding method %s in class %s with the wrong formal arguments types",
+                                methodName, classDecl.name()));
+                        return;
+                    } else if (superFormalArgType instanceof RefType) {
+                        if (!(((RefType) superFormalArgType).id().equals(((RefType) formalArgType).id()))) {
+                            setInvalid(String.format("Overriding method %s in class %s with the wrong formal arguments types",
+                                    methodName, classDecl.name()));
+                            return;
+                        }
+                    }
+                }
+
+                // Check covariant static return type
+                AstType superReturnType = OOUtils.getMethodReturnType(classDecl.superName(), methodName);
+                if (methodDecl.returnType().getClass() != superReturnType.getClass()) {
+                    setInvalid(String.format("Overriding method %s in class %s with the wrong return type",
+                            methodName, classDecl.name()));
+                    return;
+                } else if (superReturnType instanceof RefType) {
+                    if (!isSubClass(((RefType) methodDecl.returnType()).id(), ((RefType) superReturnType).id())) {
+                        setInvalid(String.format("Overriding method %s in class %s with the wrong return type",
+                                methodName, classDecl.name()));
+                        return;
+                    }
+                }
+            }
+
             if (methodNames.contains(methodName)) {
-                setInvalid(String.format("Method Name %s declared more than once in class %s", methodName, classDecl.name()));
+                setInvalid(String.format("Method name %s declared more than once in class %s", methodName, classDecl.name()));
                 return;
             } else {
                 methodNames.add(methodName);
@@ -144,11 +184,10 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(MethodDecl methodDecl) {
-        // TODO: 18: make sure that the return type is correct
-
         currentMethod = methodDecl.name();
         methodVariableTypes = new HashMap<>();
 
+        // TODO: 24: make sure no variable redeclaration (for formals and for locals)
         for (var formal : methodDecl.formals()) {
             formal.accept(this);
         }
@@ -159,6 +198,7 @@ public class AstSemanticChecksVisitor implements Visitor {
             stmt.accept(this);
         }
 
+        // TODO: 18: make sure that the return type is correct
         methodDecl.ret().accept(this);
         if (!this.isValid) {
             return;

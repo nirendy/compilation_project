@@ -73,6 +73,10 @@ public class ObjectOrientedUtils {
         return classToFieldsMapping.get(className).containsKey(fieldName);
     }
 
+    public boolean hasMethod(String className, String methodName) {
+        return classToMethodsMapping.get(className).containsKey(methodName);
+    }
+
     public int getMethodIndex(String className, String methodName) {
         return classToMethodsMapping.get(className).get(methodName).index;
     }
