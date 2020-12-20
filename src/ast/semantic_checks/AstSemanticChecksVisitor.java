@@ -605,12 +605,27 @@ public class AstSemanticChecksVisitor implements Visitor {
         // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
         // TODO: 15: make sure use of variables are already initlialized
         // TODO: 21: make sure that the args of the expression in the correct type
-        // TODO: 10: must be called from ref type
         // TODO: 11: not fully understand make sure tat the
-        // TODO: 12: must be called from this, new, local var, formal or field
         // TODO: 18: make sure that the return type is correct
 
+        // TODO: 12: must be called from this, new, local var, formal or field
+        if (!SCUtils.isValidOwnerExpressionType(e.ownerExpr())) {
+            setInvalid("Method call owner expression must be this, ref-type, or new object expression");
+            return;
+        }
+
         e.ownerExpr().accept(this);
+        if (!this.isValid) {
+            return;
+        }
+
+        // TODO: 10: when called from identifier expression, must be ref type (and not int, int[] or boolean)
+        AstType ownerType = typesStack.pop();
+        if (!(ownerType instanceof RefType)) {
+            setInvalid("If method call owner expression is ref-type, it must be an object (not int, int[] or bool)");
+            return;
+        }
+
         String ownerReg = exprResults.pop();
 
         // bitcast to pointer to the vtable
