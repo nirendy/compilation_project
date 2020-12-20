@@ -2,6 +2,7 @@ package ast.semantic_checks;
 
 import ast.*;
 
+
 import java.util.*;
 
 public class AstSemanticChecksVisitor implements Visitor {
@@ -10,11 +11,13 @@ public class AstSemanticChecksVisitor implements Visitor {
     private String currentMethod;
     private String classOfCalledMethod;
     private final ObjectOrientedUtils OOUtils;
+    private final SemanticChecksUtils SCUtils;
     private HashMap<String, AstType> methodVariableTypes;
     private final Stack<String> exprResults = new Stack<>();
 
     public AstSemanticChecksVisitor(Program program) {
         OOUtils = new ObjectOrientedUtils(program);
+        SCUtils = new SemanticChecksUtils();
     }
 
     public String getString() {
@@ -25,8 +28,9 @@ public class AstSemanticChecksVisitor implements Visitor {
         }
     }
 
-    private void setValidity(boolean val) {
-        this.isValid = val;
+    private void setInvalid(String reason) {
+        this.isValid = false;
+        System.out.println(reason);
     }
 
     private void formatVTables(Program program) {
@@ -83,17 +87,29 @@ public class AstSemanticChecksVisitor implements Visitor {
         // exprResults.push(resultReg);
     }
 
+
     @Override
     public void visit(Program program) {
         formatVTables(program);
 
         // the only place that sets isValid to true
-        this.setValidity(true);
+        this.isValid = true;
 
         program.mainClass().accept(this);
+
+
         // TODO: 3: making sure the same name cannot be used for 2 classes (including main)
-        for (ClassDecl classdecl : program.classDecls()) {
-            classdecl.accept(this);
+        HashSet<String> classNames = new HashSet<>();
+        classNames.add("Main");
+        for (ClassDecl classDecl : program.classDecls()) {
+            classDecl.accept(this);
+
+            String className = classDecl.name();
+            if (classNames.contains(className)) {
+                setInvalid(String.format("Class Name %s declared more than once", className));
+            } else {
+                classNames.add(className);
+            }
         }
     }
 
@@ -104,15 +120,33 @@ public class AstSemanticChecksVisitor implements Visitor {
 
         currentClass = classDecl.name();
 
-
         // TODO: 5: the same method can not be in the same class
-        // TODO: 6: if a methid is overrided - same number of args, same satic types, a covariant static return type)
+        // TODO: 6: if a method is overridden - same number of args, same static types, a covariant static return type)
+
+        HashSet<String> methodNames = new HashSet<>();
         for (var methodDecl : classDecl.methoddecls()) {
             methodDecl.accept(this);
+
+            String methodName = methodDecl.name();
+            if (methodNames.contains(methodName)) {
+                setInvalid(String.format("Method Name %s declared more than once in class %s", methodName, classDecl.name()));
+            } else {
+                methodNames.add(methodName);
+            }
         }
+
         // TODO: 4: same field do not used twice (including sub_classes)
+        // TODO (including sub_classes)
+        HashSet<String> fieldNames = new HashSet<>();
         for (var fieldDecl : classDecl.fields()) {
             fieldDecl.accept(this);
+
+            String fieldName = fieldDecl.name();
+            if (fieldNames.contains(fieldName)) {
+                setInvalid(String.format("Field Name %s declared more than once in class %s", fieldName, classDecl.name()));
+            } else {
+                fieldNames.add(fieldName);
+            }
         }
     }
 
@@ -167,7 +201,7 @@ public class AstSemanticChecksVisitor implements Visitor {
     @Override
     public void visit(IfStatement ifStatement) {
 
-        // TODO: 15:: manage whether inializaion in every branch
+        // TODO: 15: manage whether initialization in every branch
         // TODO: 21: make sure that the args of the expression in the correct type
         // TODO: 17: make sure the expression is bool
 
@@ -185,7 +219,7 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(WhileStatement whileStatement) {
-        // TODO: 15:: manage whether inializaion in every branch
+        // TODO: 15: manage whether inializaion in every branch
         // TODO: 21: make sure that the args of the expression in the correct type
         // TODO: 17: make sure the expression is bool
 
@@ -206,7 +240,7 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(AssignStatement assignStatement) {
-        // TODO: 16: make sure that the assignmnet of rv is valid according to lv
+        // TODO: 16: make sure that the assignment of rv is valid according to lv
         assignStatement.rv().accept(this);
         String rv = exprResults.pop();
 
@@ -226,7 +260,7 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(AssignArrayStatement assignArrayStatement) {
-        // TODO: 15:: make sure the array is initialized
+        // TODO: 15: make sure the array is initialized
         // TODO: 21: make sure that the args of the expression in the correct type
         // TODO: 23: make sure that the array is int[] and the index is int and the value is int
         AstType lvType = formatAssignmentLv(assignArrayStatement.lv());
