@@ -675,7 +675,7 @@ public class AstSemanticChecksVisitor implements Visitor {
             return;
         }
 
-        // TODO: 10: when called from identifier expression, must be ref type (and not int, int[] or boolean)
+        // TODO: 10: must be ref type (and not int, int[] or boolean)
         AstType ownerType = typesStack.pop();
         if (!(ownerType instanceof RefType)) {
             setInvalid("If method call owner expression is ref-type, it must be an object (not int, int[] or bool)");
