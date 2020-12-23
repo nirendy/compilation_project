@@ -121,7 +121,7 @@ public class ObjectOrientedUtils {
         for (ClassDecl classNode : program.classDecls()) {
             classMethods = new HashMap<>();
 
-            if (classNode.superName() != null) {
+            if (classNode.superName() != null && classToMethodsMapping.containsKey(classNode.superName())) {
                 // The class has a super class, hence its inheriting its methods
                 classMethods.putAll(classToMethodsMapping.get(classNode.superName()));
             }
@@ -152,7 +152,7 @@ public class ObjectOrientedUtils {
         for (ClassDecl classNode : program.classDecls()) {
             classFields = new HashMap<>();
 
-            if (classNode.superName() != null) {
+            if (classNode.superName() != null && classToFieldsMapping.containsKey(classNode.superName())) {
                 // The class has a super class, hence its inheriting its fields
                 classFields.putAll(classToFieldsMapping.get(classNode.superName()));
             }
