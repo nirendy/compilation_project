@@ -6,15 +6,15 @@ import ast.*;
 import java.util.*;
 
 public class AstSemanticChecksVisitor implements Visitor {
-    private boolean isValid = false; // Starts at false. Making sure that the only way it can turn true is it if started at program
+    private boolean isValid = true;
     private String currentClass;
     private String mainClassName;
     private String currentMethod;
     private String lastVisitedClassType;
     private final ObjectOrientedUtils OOUtils;
     private final SemanticChecksUtils SCUtils;
-    private HashMap<String, AstType> methodVariableTypes;
-    private HashMap<String, InitializationState> methodVariablesInitializationStates;
+    private HashMap<String, AstType> methodVariableTypes = new HashMap<>();;
+    private HashMap<String, InitializationState> methodVariablesInitializationStates = new HashMap<>();
     private final Stack<AstType> typesStack = new Stack<>();
     Map<String, Set<String>> classToSuperClasses = new HashMap<>();
 
@@ -36,21 +36,57 @@ public class AstSemanticChecksVisitor implements Visitor {
         System.out.println(reason);
     }
     
+    private boolean notSubClass(String subClassName, String parentClassName) {
+        if (subClassName.equals(parentClassName)) {
+            return false;
+        }
+        return !this.classToSuperClasses.get(subClassName).contains(parentClassName);
+    }
+
+    private void updateClassToSuperClasses(ClassDecl classDecl) {
+        if (classDecl.superName() == null) {
+            this.classToSuperClasses.put(classDecl.name(), new HashSet<>());
+            return;
+        }
+
+        if (!this.classToSuperClasses.containsKey(classDecl.superName())) {
+            if (classDecl.superName().equals(classDecl.name())) {  // 1: Class does not extend itself (directly)
+                setInvalid(String.format("Class '%s' extends itself", classDecl.name()));
+            } else { // 1: Class is declared after the class it's extending
+                setInvalid(String.format("Superclass '%s' must be declared before extending class '%s'",
+                        classDecl.superName(), classDecl.name()));
+            }
+            return;
+        }
+
+        // 1: Class does not extend itself (indirectly)
+        if (this.classToSuperClasses.get(classDecl.superName()).contains(classDecl.name())) {
+            setInvalid(String.format("Class '%s' (indirectly) extends itself", classDecl.name()));
+            return;
+        }
+
+        HashSet<String> superClasses = new HashSet<>(this.classToSuperClasses.get(classDecl.superName()));
+        superClasses.add(classDecl.superName());
+        this.classToSuperClasses.put(classDecl.name(), superClasses);
+    }
 
     @Override
     public void visit(Program program) {
-
-        // the only place that sets isValid to true
-        this.isValid = true;
-
         program.mainClass().accept(this);
         if (!this.isValid) {
             return;
         }
 
-        // TODO: 3: making sure the same name cannot be used for 2 classes (including main)
+        // 3: Making sure the same name cannot be used for 2 classes (including main)
         HashSet<String> classNames = new HashSet<>();
         this.mainClassName = program.mainClass().name();
+
+        for (ClassDecl classDecl : program.classDecls()) {
+            updateClassToSuperClasses(classDecl);
+            if (!this.isValid) {
+                return;
+            }
+        }
 
         classNames.add(this.mainClassName);
         for (ClassDecl classDecl : program.classDecls()) {
@@ -69,44 +105,9 @@ public class AstSemanticChecksVisitor implements Visitor {
         }
     }
 
-    private boolean isSubClass(String subClassName, String parentClassName) {
-        if (subClassName.equals(parentClassName)) {
-            return true;
-        }
-        return this.classToSuperClasses.get(subClassName).contains(parentClassName);
-    }
-
-    private void updateClassToSuperClasses(ClassDecl classDecl) {
-        if (classDecl.superName() == null) {
-            this.classToSuperClasses.put(classDecl.name(), new HashSet<>());
-            return;
-        }
-
-        if (!this.classToSuperClasses.containsKey(classDecl.superName())) {
-            setInvalid(String.format("Superclass '%s' must be declared before extending class '%s'",
-                    classDecl.superName(), classDecl.name()));
-            return;
-        }
-
-        HashSet<String> superClasses = new HashSet<>(this.classToSuperClasses.get(classDecl.superName()));
-        if (superClasses.contains(classDecl.name())) {
-            setInvalid(String.format("Class '%s' extends itself", classDecl.name()));
-            return;
-        }
-
-        superClasses.add(classDecl.superName());
-        this.classToSuperClasses.put(classDecl.name(), superClasses);
-    }
-
     @Override
     public void visit(ClassDecl classDecl) {
-        // TODO: 1: class do not extends itself (circularly)
-        updateClassToSuperClasses(classDecl);
-        if (!this.isValid) {
-            return;
-        }
-
-        // TODO: 2: make sure main class cannot be extended
+        // 2: Make sure the main class is not extended
         if (classDecl.superName() != null && classDecl.superName().equals(this.mainClassName)) {
             setInvalid(String.format("The main class (class '%s') cannot be extended", this.mainClassName));
             return;
@@ -114,8 +115,7 @@ public class AstSemanticChecksVisitor implements Visitor {
 
         currentClass = classDecl.name();
 
-        // TODO: 6: if a method is overridden - same number of args, same static types, a covariant static return type)
-        // TODO: 5: the same method can not be in the same class
+        // 6: Method overriding is done correctly
         HashSet<String> methodNames = new HashSet<>();
         for (var methodDecl : classDecl.methoddecls()) {
             String methodName = methodDecl.name();
@@ -152,7 +152,7 @@ public class AstSemanticChecksVisitor implements Visitor {
                             methodName, classDecl.name()));
                     return;
                 } else if (superReturnType instanceof RefType) {
-                    if (!isSubClass(((RefType) methodDecl.returnType()).id(), ((RefType) superReturnType).id())) {
+                    if (notSubClass(((RefType) methodDecl.returnType()).id(), ((RefType) superReturnType).id())) {
                         setInvalid(String.format("Overriding method %s in class %s with the wrong return type",
                                 methodName, classDecl.name()));
                         return;
@@ -160,6 +160,7 @@ public class AstSemanticChecksVisitor implements Visitor {
                 }
             }
 
+            // 5: Two methods with the same name can't be defined for the same class (no overloading)
             if (methodNames.contains(methodName)) {
                 setInvalid(String.format("Method name %s declared more than once in class %s", methodName, classDecl.name()));
                 return;
@@ -173,8 +174,7 @@ public class AstSemanticChecksVisitor implements Visitor {
             }
         }
 
-        // TODO: 4: same field is not used twice (including sub_classes)
-        // TODO (including sub_classes)
+        // 4: The same name cannot be used for the same field in one class (including subclasses)
         HashSet<String> fieldNames = new HashSet<>();
         for (var fieldDecl : classDecl.fields()) {
             String fieldName = fieldDecl.name();
@@ -189,15 +189,18 @@ public class AstSemanticChecksVisitor implements Visitor {
                 fieldNames.add(fieldName);
             }
 
-            fieldDecl.accept(this);
+            // 8: Reference type must be declared in the file
+            fieldDecl.type().accept(this);
             if (!this.isValid) {
                 return;
             }
+            typesStack.pop();
         }
     }
 
     @Override
     public void visit(MainClass mainClass) {
+        classToSuperClasses.put(mainClass.name(), new HashSet<>());
         mainClass.mainStatement().accept(this);
     }
 
@@ -207,7 +210,6 @@ public class AstSemanticChecksVisitor implements Visitor {
         methodVariableTypes = new HashMap<>();
         methodVariablesInitializationStates = new HashMap<>();
 
-        // TODO: 24: make sure no variable redeclaration (for formals and for locals)
         for (var formal : methodDecl.formals()) {
             formal.accept(this);
             if (!this.isValid) {
@@ -227,7 +229,7 @@ public class AstSemanticChecksVisitor implements Visitor {
             }
         }
 
-        // TODO: 18: make sure that the return type is correct
+        // 18: The static type of "e" in "return e" is valid according to the definition of the current method.
         methodDecl.ret().accept(this);
         if (!this.isValid) {
             return;
@@ -237,25 +239,24 @@ public class AstSemanticChecksVisitor implements Visitor {
 
         if (retExpType.getClass() != methodDecl.returnType().getClass()) {
             setInvalid(String.format("In method %s, the static type of e in 'return e' must match the method's return type", methodDecl.name()));
-            return;
         } else if (methodDecl.returnType() instanceof RefType) {
-            if (!isSubClass(((RefType) retExpType).id(), ((RefType) methodDecl.returnType()).id())) {
+            if (notSubClass(((RefType) retExpType).id(), ((RefType) methodDecl.returnType()).id())) {
                 setInvalid(String.format("In method %s, the static type of e in 'return e' is not a subtype of the method's return type", methodDecl.name()));
-                return;
             }
         }
     }
 
     @Override
     public void visit(FormalArg formalArg) {
-        // TODO: 24: make sure no variable redeclaration (for formals and for locals)
+        // 24: Variable redeclaration is forbidden - the same name cannot be
+        // used for declarations of two formal parameters.
         if (methodVariableTypes.containsKey(formalArg.name())) {
             setInvalid(String.format("Formal arg %s declared more than once in method %s of class %s", formalArg.name(),
                     this.currentMethod, this.currentClass));
             return;
         }
 
-        // TODO: 8: reference type must be declared in the file
+        // 8: Reference type must be declared in the file
         formalArg.type().accept(this);
         if (!this.isValid) {
             return;
@@ -266,14 +267,15 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(VarDecl varDecl) {
-        // TODO: 24: make sure no variable redeclaration (for formals and for locals)
+        // 24: Variable redeclaration is forbidden - the same name cannot be
+        // used for declarations of two local variables.
         if (methodVariableTypes.containsKey(varDecl.name())) {
             setInvalid(String.format("Local variable %s re-declared in method %s of class %s", varDecl.name(),
                     this.currentMethod, this.currentClass));
             return;
         }
 
-        // TODO: 8: reference type must be declared in the file
+        // 8: Reference type must be declared in the file
         varDecl.type().accept(this);
         if (!this.isValid) {
             return;
@@ -310,16 +312,12 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(IfStatement ifStatement) {
-
-        // TODO: 15: manage whether initialization in every branch
-        // TODO: 21: make sure that the args of the expression in the correct type
-        // TODO: 17: make sure the expression is bool
-
         ifStatement.cond().accept(this);
         if (!this.isValid) {
             return;
         }
 
+        // 17: The condition expression results in a boolean
         AstType type = typesStack.pop();
         if (!(type instanceof BoolAstType)) {
             setInvalid("If statement got non-boolean argument for the condition");
@@ -345,21 +343,20 @@ public class AstSemanticChecksVisitor implements Visitor {
             return;
         }
 
+        // 15: Every local variable is definitely initialized (assigned to) before it is used (in every branch).
+        // This is later check in the IdentifierExpr.
         this.methodVariablesInitializationStates = joinMethodVariablesInitializationStates(
                 thenMethodVariablesInitializationStates, this.methodVariablesInitializationStates);
     }
 
     @Override
     public void visit(WhileStatement whileStatement) {
-        // TODO: 15: manage whether inializaion in every branch
-        // TODO: 21: make sure that the args of the expression in the correct type
-        // TODO: 17: make sure the expression is bool
-
         whileStatement.cond().accept(this);
         if (!this.isValid) {
             return;
         }
 
+        // 17: The condition expression results in a boolean
         AstType type = typesStack.pop();
         if (!(type instanceof BoolAstType)) {
             setInvalid("While statement got non-boolean argument for the condition");
@@ -375,22 +372,23 @@ public class AstSemanticChecksVisitor implements Visitor {
             return;
         }
 
+        // 15: Every local variable is definitely initialized (assigned to) before it is used (in every branch).
+        // This is later check in the IdentifierExpr.
         this.methodVariablesInitializationStates = joinMethodVariablesInitializationStates(
                 originalMethodVariablesInitializationStates, this.methodVariablesInitializationStates);
     }
 
     @Override
     public void visit(SysoutStatement sysoutStatement) {
-        // TODO: 20: make sure that the arg is int
         sysoutStatement.arg().accept(this);
         if (!this.isValid) {
             return;
         }
 
+        // 17: The arg expression results in an int
         AstType type = typesStack.pop();
         if (!(type instanceof IntAstType)) {
             setInvalid("Sysout statement got non-numeric argument");
-            return;
         }
     }
 
@@ -411,9 +409,6 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(AssignStatement assignStatement) {
-        // TODO: 16: make sure that the assignment of rv is valid according to lv
-        // TODO: 15: mark lv as assigned (unless in a branch)
-        // TODO: 21: make sure that the args of the expression in the correct type
         visitAssignmentLv(assignStatement.lv());
         if (!this.isValid) {
             return;
@@ -427,27 +422,24 @@ public class AstSemanticChecksVisitor implements Visitor {
 
         AstType rvType = typesStack.pop();
 
+        // 16: In an assignment "x = e", the static type of "e" is valid according to the declaration of x
         if (rvType.getClass() != lvType.getClass()) {
             setInvalid("Assignment (x = a) statement got non-matching types");
-            return;
         } else if (rvType instanceof RefType) {
-            if (!isSubClass(((RefType) rvType).id(), ((RefType) lvType).id())) {
+            if (notSubClass(((RefType) rvType).id(), ((RefType) lvType).id())) {
                 setInvalid("Assignment (x = a) statement got non-matching types (one is not a subtype of the other)");
-                return;
             }
         }
     }
 
     @Override
     public void visit(AssignArrayStatement assignArrayStatement) {
-        // TODO: 15: make sure the array is initialized
-        // TODO: 21: make sure that the args of the expression in the correct type
-        // TODO: 23: make sure that the array is int[] and the index is int and the value is int
         visitAssignmentLv(assignArrayStatement.lv());
         if (!this.isValid) {
             return;
         }
 
+        // 23: n an assignment to an array "x[e1] = e2", x is int[], e1 is an int and also e2 is an int
         AstType lvType = typesStack.pop();
         if (!(lvType instanceof IntArrayAstType)) {
             setInvalid("Array assignment (x[e1] = e2) statement got a non-array argument (as x)");
@@ -473,13 +465,11 @@ public class AstSemanticChecksVisitor implements Visitor {
         AstType rvType = typesStack.pop();
         if (!(rvType instanceof IntAstType)) {
             setInvalid("Array assignment (x[e1] = e2) statement got a non-numeric argument (as e2)");
-            return;
         }
     }
 
-    private void visitBooleanBinaryExpr(BinaryExpr e, String op) {
-        // Note: we only use this to check boolean operations ("&&" and ">")
-        // so the argument types are always boolean.
+    @Override
+    public void visit(AndExpr e) {
         e.e1().accept(this);
         if (!this.isValid) {
             return;
@@ -494,26 +484,15 @@ public class AstSemanticChecksVisitor implements Visitor {
         AstType type2 = typesStack.pop();
 
         if (!(type1 instanceof BoolAstType) || !(type2 instanceof BoolAstType)) {
-            setInvalid(String.format("%s op got non-boolean arguments", op));
-            return;
-        }
-    }
-
-    @Override
-    public void visit(AndExpr e) {
-        // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
-        // TODO: 15: make sure use of variables are already initlialized
-        // TODO: 21: make sure that the args of the expression in the correct type
-        visitBooleanBinaryExpr(e, "And (&&)");
-        if (!this.isValid) {
+            setInvalid("And (&&) op got non-boolean arguments");
             return;
         }
 
         typesStack.push(new BoolAstType());
     }
 
-    private void visitArithmeticBinaryExpr(BinaryExpr e, String op) {
-        // Note: we only use this to check arithmetic operations ("+", "-" and "*")
+    private void visitNumericBinaryExpr(BinaryExpr e, String op) {
+        // Note: we only use this to check numeric operations ("+", "-", "*" and "<")
         // so the argument types are always int.
         e.e1().accept(this);
         if (!this.isValid) {
@@ -530,16 +509,12 @@ public class AstSemanticChecksVisitor implements Visitor {
 
         if (!(type1 instanceof IntAstType) || !(type2 instanceof IntAstType)) {
             setInvalid(String.format("%s op got non-numeric arguments", op));
-            return;
         }
     }
 
     @Override
     public void visit(LtExpr e) {
-        // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
-        // TODO: 15: make sure use of variables are already initlialized
-        // TODO: 21: make sure that the args of the expression in the correct type
-        visitArithmeticBinaryExpr(e, "Lt (<)");
+        visitNumericBinaryExpr(e, "Lt (<)");
         if (!this.isValid) {
             return;
         }
@@ -549,9 +524,6 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(NotExpr e) {
-        // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
-        // TODO: 15: make sure use of variables are already initlialized
-        // TODO: 21: make sure that the args of the expression in the correct type
         e.e().accept(this);
         if (!this.isValid) {
             return;
@@ -568,10 +540,7 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(AddExpr e) {
-        // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
-        // TODO: 15: make sure use of variables are already initlialized
-        // TODO: 21: make sure that the args of the expression in the correct type
-        visitArithmeticBinaryExpr(e, "Add (+)");
+        visitNumericBinaryExpr(e, "Add (+)");
         if (!this.isValid) {
             return;
         }
@@ -581,10 +550,7 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(SubtractExpr e) {
-        // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
-        // TODO: 15: make sure use of variables are already initlialized
-        // TODO: 21: make sure that the args of the expression in the correct type
-        visitArithmeticBinaryExpr(e, "Subtract (-)");
+        visitNumericBinaryExpr(e, "Subtract (-)");
         if (!this.isValid) {
             return;
         }
@@ -594,10 +560,7 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(MultExpr e) {
-        // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
-        // TODO: 15: make sure use of variables are already initlialized
-        // TODO: 21: make sure that the args of the expression in the correct type
-        visitArithmeticBinaryExpr(e, "Mult (*)");
+        visitNumericBinaryExpr(e, "Mult (*)");
         if (!this.isValid) {
             return;
         }
@@ -607,10 +570,7 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(ArrayAccessExpr e) {
-        // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
-        // TODO: 15: make sure use of variables are already initlialized
-        // TODO: 21: make sure that the args of the expression in the correct type
-        // TODO: 22: make sure that the array is int[] and the index is int
+        // 22: In an array access x[e], x is int[] and e is an int.
         e.arrayExpr().accept(this);
         if (!this.isValid) {
             return;
@@ -639,10 +599,7 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(ArrayLengthExpr e) {
-        // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
-        // TODO: 15: make sure use of variables are already initlialized
-        // TODO: 21: make sure that the args of the expression in the correct type
-        // TODO: 13: static type of which it invokes is int[]
+        // 13: The static type of the object on which length invoked is int[].
         e.arrayExpr().accept(this);
         if (!this.isValid) {
             return;
@@ -660,12 +617,7 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(MethodCallExpr e) {
-        // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
-        // TODO: 15: make sure use of variables are already initlialized
-        // TODO: 21: make sure that the args of the expression in the correct type
-        // TODO: 18: make sure that the return type is correct
-
-        // TODO: 12: must be called from this, new, local var, formal or field
+        // 12: Must be called from this, new, or ref-type
         if (!SCUtils.isValidOwnerExpressionType(e.ownerExpr())) {
             setInvalid("Method call owner expression must be this, ref-type, or new object expression");
             return;
@@ -677,28 +629,27 @@ public class AstSemanticChecksVisitor implements Visitor {
         }
 
         String methodOwnerClass = lastVisitedClassType;
-        // TODO: 10: must be ref type (and not int, int[] or boolean)
+        // 10: In method invocation, the static type of the object is a reference type (not int, bool, or int[])
         AstType ownerType = typesStack.pop();
         if (!(ownerType instanceof RefType)) {
             setInvalid("If method call owner expression is ref-type, it must be an object (not int, int[] or bool)");
             return;
         }
 
-        // TODO: 11: check method exists for the class of the owner expr, and that actual args match formal args
-        // Check method exists for class
+        // 11: Check method exists for class
         if (!OOUtils.hasMethod(methodOwnerClass, e.methodId())) {
-            setInvalid(String.format("Method %s doesn't exist in class class %s", e.methodId(), methodOwnerClass));
+            setInvalid(String.format("Method %s doesn't exist in class %s", e.methodId(), methodOwnerClass));
             return;
         }
 
-        // Check number of args match between call and declaration
+        // 11: Check number of args match between call and declaration
         List<AstType> formalArgsTypes = OOUtils.getMethodFormalArgsTypes(methodOwnerClass, e.methodId());
         if (formalArgsTypes.size() != e.actuals().size()) {
             setInvalid(String.format("Method %s of class %s called with wrong number of arguments", e.methodId(), methodOwnerClass));
             return;
         }
 
-        // Check types of args match between call and declaration
+        // 11: Check types of args match between call and declaration
         for (int i = 0; i < formalArgsTypes.size(); i++) {
             e.actuals().get(i).accept(this);
             if (!this.isValid) {
@@ -712,7 +663,7 @@ public class AstSemanticChecksVisitor implements Visitor {
                         e.methodId(), methodOwnerClass));
                 return;
             } else if (actualType instanceof RefType) {
-                if (!isSubClass(((RefType) actualType).id(), ((RefType) formalArgType).id())) {
+                if (notSubClass(((RefType) actualType).id(), ((RefType) formalArgType).id())) {
                     setInvalid(String.format("Method %s of class %s called with wrong type of argument",
                         e.methodId(), methodOwnerClass));
                     return;
@@ -725,34 +676,23 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(IntegerLiteralExpr e) {
-        // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
-        // TODO: 15: make sure use of variables are already initlialized
-        // TODO: 21: make sure that the args of the expression in the correct type
         typesStack.push(new IntAstType());
     }
 
     @Override
     public void visit(TrueExpr e) {
-        // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
-        // TODO: 15: make sure use of variables are already initlialized
-        // TODO: 21: make sure that the args of the expression in the correct type
         typesStack.push(new BoolAstType());
     }
 
     @Override
     public void visit(FalseExpr e) {
-        // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
-        // TODO: 15: make sure use of variables are already initlialized
-        // TODO: 21: make sure that the args of the expression in the correct type
         typesStack.push(new BoolAstType());
     }
 
     @Override
     public void visit(IdentifierExpr e) {
-        // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current 
-        //  method or to a field defined in the same class of supercalss
-        // TODO: 15: make sure use of variables are already initlialized
-        // TODO: 21: make sure that the args of the expression in the correct type
+        // 14: A reference in an expression to a variable is to a local variable or formal parameter defined in the
+        // current method, or to a field defined in the current class or its superclasses
         AstType type;
         if (methodVariableTypes.containsKey(e.id())) {
             type = methodVariableTypes.get(e.id());
@@ -780,9 +720,6 @@ public class AstSemanticChecksVisitor implements Visitor {
     }
 
     public void visit(ThisExpr e) {
-        // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
-        // TODO: 15: make sure use of variables are already initlialized
-        // TODO: 21: make sure that the args of the expression in the correct type
         // In case we got here from a method call expression (as the owner expression),
         // save the class name to classOfCalledMethod
         lastVisitedClassType = currentClass;
@@ -792,9 +729,6 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(NewIntArrayExpr e) {
-        // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
-        // TODO: 15: make sure use of variables are already initlialized
-        // TODO: 21: make sure that the args of the expression in the correct type
         e.lengthExpr().accept(this);
         if (!this.isValid) {
             return;
@@ -811,11 +745,8 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(NewObjectExpr e) {
-        // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
-        // TODO: 15: make sure use of variables are already initlialized
-        // TODO: 21: make sure that the args of the expression in the correct type
-        // TODO: 9: new must be declared in the file
-        if (!OOUtils.hasClass(e.classId())) {
+        // 9: new A() is invoked for a class A that is defined somewhere in the file
+        if (OOUtils.classNotInProgram(e.classId())) {
             setInvalid((String.format("New object type '%s' was not declared in the program", e.classId())));
             return;
         }
@@ -844,8 +775,8 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(RefType t) {
-        // TODO: 8: reference type must be declared in the file
-        if (!OOUtils.hasClass(t.id())) {
+        // 8: Reference type must be declared in the file
+        if (OOUtils.classNotInProgram(t.id())) {
             setInvalid((String.format("Reference type '%s' was not declared in the program", t.id())));
             return;
         }

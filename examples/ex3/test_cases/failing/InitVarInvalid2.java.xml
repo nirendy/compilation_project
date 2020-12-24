@@ -58,21 +58,19 @@
 
 
                     <body>
+                    <block>
+                        <statements>
                         <if>
                             <cond>
                                 <lt>
                                     <e1>
                                         <int-literal>
-                                            <num>
-                                                2
-                                            </num>
+                                            <num>2</num>
                                         </int-literal>
                                     </e1>
                                     <e2>
                                         <int-literal>
-                                            <num>
-                                                3
-                                            </num>
+                                            <num>3</num>
                                         </int-literal>
                                     </e2>
                                 </lt>
@@ -85,9 +83,7 @@
                                     <lv>x</lv>
                                     <rv>
                                         <int-literal>
-                                            <num>
-                                                5
-                                            </num>
+                                            <num>5</num>
                                         </int-literal>
                                     </rv>
                                 </assign>
@@ -246,8 +242,6 @@
                                         </array-access>
                                     </rv>
                                 </assign>
-
-
                                     </statements>
                                 </block>
                             </elsecase>
@@ -255,29 +249,18 @@
                     <assign>
                         <lv>a</lv>
                         <rv>
-                            <true/>
+                            <ref-id><id>b</id></ref-id>
                         </rv>
                     </assign>
-                        <assign>
-                            <lv>arr</lv>
-                            <rv>
-                                <new-int-array>
-                                    <lengthExpr>
-                                        <int-literal>
-                                            <num>7</num>
-                                        </int-literal>
-                                    </lengthExpr>
-                                </new-int-array>
-                            </rv>
-                        </assign>
+                    </statements>
+                    </block>
                     </body>
 
 
                     <ret>
-                        <ref-id>
-                            <id>arr</id>
-                        </ref-id>
-
+                        <int-literal>
+                            <num>0</num>
+                        </int-literal>
                     </ret>
                 </methoddecl>
             </methoddecls>
