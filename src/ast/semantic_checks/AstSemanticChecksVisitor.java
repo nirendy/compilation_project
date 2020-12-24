@@ -10,7 +10,7 @@ public class AstSemanticChecksVisitor implements Visitor {
     private String currentClass;
     private String mainClassName;
     private String currentMethod;
-    private String classOfCalledMethod;
+    private String lastVisitedClassType;
     private final ObjectOrientedUtils OOUtils;
     private final SemanticChecksUtils SCUtils;
     private HashMap<String, AstType> methodVariableTypes;
@@ -94,6 +94,7 @@ public class AstSemanticChecksVisitor implements Visitor {
             return;
         }
 
+        superClasses.add(classDecl.superName());
         this.classToSuperClasses.put(classDecl.name(), superClasses);
     }
 
@@ -511,12 +512,34 @@ public class AstSemanticChecksVisitor implements Visitor {
         typesStack.push(new BoolAstType());
     }
 
+    private void visitArithmeticBinaryExpr(BinaryExpr e, String op) {
+        // Note: we only use this to check arithmetic operations ("+", "-" and "*")
+        // so the argument types are always int.
+        e.e1().accept(this);
+        if (!this.isValid) {
+            return;
+        }
+
+        AstType type1 = typesStack.pop();
+        e.e2().accept(this);
+        if (!this.isValid) {
+            return;
+        }
+
+        AstType type2 = typesStack.pop();
+
+        if (!(type1 instanceof IntAstType) || !(type2 instanceof IntAstType)) {
+            setInvalid(String.format("%s op got non-numeric arguments", op));
+            return;
+        }
+    }
+
     @Override
     public void visit(LtExpr e) {
         // TODO: 14: make sure that all the varialbe access is to a local variable, formal param defined in the current method or to a field defined in the same class of supercalss
         // TODO: 15: make sure use of variables are already initlialized
         // TODO: 21: make sure that the args of the expression in the correct type
-        visitBooleanBinaryExpr(e, "Lt (<)");
+        visitArithmeticBinaryExpr(e, "Lt (<)");
         if (!this.isValid) {
             return;
         }
@@ -541,28 +564,6 @@ public class AstSemanticChecksVisitor implements Visitor {
         }
 
         typesStack.push(new BoolAstType());
-    }
-
-    private void visitArithmeticBinaryExpr(BinaryExpr e, String op) {
-        // Note: we only use this to check arithmetic operations ("+", "-" and "*")
-        // so the argument types are always int.
-        e.e1().accept(this);
-        if (!this.isValid) {
-            return;
-        }
-
-        AstType type1 = typesStack.pop();
-        e.e2().accept(this);
-        if (!this.isValid) {
-            return;
-        }
-
-        AstType type2 = typesStack.pop();
-
-        if (!(type1 instanceof IntAstType) || !(type2 instanceof IntAstType)) {
-            setInvalid(String.format("%s op got non-numeric arguments", op));
-            return;
-        }
     }
 
     @Override
@@ -675,6 +676,7 @@ public class AstSemanticChecksVisitor implements Visitor {
             return;
         }
 
+        String methodOwnerClass = lastVisitedClassType;
         // TODO: 10: must be ref type (and not int, int[] or boolean)
         AstType ownerType = typesStack.pop();
         if (!(ownerType instanceof RefType)) {
@@ -684,15 +686,15 @@ public class AstSemanticChecksVisitor implements Visitor {
 
         // TODO: 11: check method exists for the class of the owner expr, and that actual args match formal args
         // Check method exists for class
-        if (!OOUtils.hasMethod(classOfCalledMethod, e.methodId())) {
-            setInvalid(String.format("Method %s doesn't exist in class class %s", e.methodId(), classOfCalledMethod));
+        if (!OOUtils.hasMethod(methodOwnerClass, e.methodId())) {
+            setInvalid(String.format("Method %s doesn't exist in class class %s", e.methodId(), methodOwnerClass));
             return;
         }
 
         // Check number of args match between call and declaration
-        List<AstType> formalArgsTypes = OOUtils.getMethodFormalArgsTypes(classOfCalledMethod, e.methodId());
+        List<AstType> formalArgsTypes = OOUtils.getMethodFormalArgsTypes(methodOwnerClass, e.methodId());
         if (formalArgsTypes.size() != e.actuals().size()) {
-            setInvalid(String.format("Method %s of class %s called with wrong number of arguments", e.methodId(), classOfCalledMethod));
+            setInvalid(String.format("Method %s of class %s called with wrong number of arguments", e.methodId(), methodOwnerClass));
             return;
         }
 
@@ -707,18 +709,18 @@ public class AstSemanticChecksVisitor implements Visitor {
             AstType formalArgType = formalArgsTypes.get(i);
             if (actualType.getClass() != formalArgType.getClass()) {
                 setInvalid(String.format("Method %s of class %s called with wrong type of argument",
-                        e.methodId(), classOfCalledMethod));
+                        e.methodId(), methodOwnerClass));
                 return;
             } else if (actualType instanceof RefType) {
                 if (!isSubClass(((RefType) actualType).id(), ((RefType) formalArgType).id())) {
                     setInvalid(String.format("Method %s of class %s called with wrong type of argument",
-                        e.methodId(), classOfCalledMethod));
+                        e.methodId(), methodOwnerClass));
                     return;
                 }
             }
         }
 
-        typesStack.push(OOUtils.getMethodReturnType(classOfCalledMethod, e.methodId()));
+        typesStack.push(OOUtils.getMethodReturnType(methodOwnerClass, e.methodId()));
     }
 
     @Override
@@ -764,7 +766,7 @@ public class AstSemanticChecksVisitor implements Visitor {
         // In case we got here from a method call expression (as the owner expression),
         // save the class name to classOfCalledMethod
         if (type instanceof RefType) {
-            classOfCalledMethod = ((RefType) type).id();
+            lastVisitedClassType = ((RefType) type).id();
         }
 
         // Check that local vars are initialized before use
@@ -783,7 +785,7 @@ public class AstSemanticChecksVisitor implements Visitor {
         // TODO: 21: make sure that the args of the expression in the correct type
         // In case we got here from a method call expression (as the owner expression),
         // save the class name to classOfCalledMethod
-        classOfCalledMethod = currentClass;
+        lastVisitedClassType = currentClass;
 
         typesStack.push(new RefType(currentClass));
     }
@@ -822,7 +824,7 @@ public class AstSemanticChecksVisitor implements Visitor {
         
         // In case we got here from a method call expression (as the owner expression),
         // save the class name to classOfCalledMethod
-        classOfCalledMethod = e.classId();
+        lastVisitedClassType = e.classId();
     }
 
     @Override
