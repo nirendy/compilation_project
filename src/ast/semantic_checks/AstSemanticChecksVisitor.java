@@ -201,6 +201,7 @@ public class AstSemanticChecksVisitor implements Visitor {
     @Override
     public void visit(MainClass mainClass) {
         classToSuperClasses.put(mainClass.name(), new HashSet<>());
+        currentClass = mainClass.name();
         mainClass.mainStatement().accept(this);
     }
 
@@ -392,6 +393,22 @@ public class AstSemanticChecksVisitor implements Visitor {
         }
     }
 
+    private boolean validateInitialized(String varName) {
+        if (methodVariablesInitializationStates.containsKey(varName)) {
+            if (methodVariablesInitializationStates.get(varName) != InitializationState.INITIALIZED) {
+                setInvalid(String.format("Reference to uninitialized variable '%s'", varName));
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void setInitialized(String lv) {
+        if (methodVariablesInitializationStates.containsKey(lv)) {
+            methodVariablesInitializationStates.put(lv, InitializationState.INITIALIZED);
+        }
+    }
+
     private void visitAssignmentLv(String lv) {
         if (methodVariableTypes.containsKey(lv)) {
             typesStack.push(methodVariableTypes.get(lv));
@@ -399,28 +416,24 @@ public class AstSemanticChecksVisitor implements Visitor {
             typesStack.push(OOUtils.getFieldType(currentClass, lv));
         } else {
             setInvalid(String.format("Reference to undefined name '%s'", lv));
-            return;
-        }
-
-        if (methodVariablesInitializationStates.containsKey(lv)) {
-            methodVariablesInitializationStates.put(lv, InitializationState.INITIALIZED);
         }
     }
 
     @Override
     public void visit(AssignStatement assignStatement) {
-        visitAssignmentLv(assignStatement.lv());
-        if (!this.isValid) {
-            return;
-        }
-
-        AstType lvType = typesStack.pop();
         assignStatement.rv().accept(this);
         if (!this.isValid) {
             return;
         }
 
         AstType rvType = typesStack.pop();
+
+        visitAssignmentLv(assignStatement.lv());
+        if (!this.isValid) {
+            return;
+        }
+        setInitialized(assignStatement.lv());
+        AstType lvType = typesStack.pop();
 
         // 16: In an assignment "x = e", the static type of "e" is valid according to the declaration of x
         if (rvType.getClass() != lvType.getClass()) {
@@ -434,18 +447,21 @@ public class AstSemanticChecksVisitor implements Visitor {
 
     @Override
     public void visit(AssignArrayStatement assignArrayStatement) {
-        visitAssignmentLv(assignArrayStatement.lv());
+        // 23: n an assignment to an array "x[e1] = e2", x is int[], e1 is an int and also e2 is an int
+
+        // Check rv
+        assignArrayStatement.rv().accept(this);
         if (!this.isValid) {
             return;
         }
 
-        // 23: n an assignment to an array "x[e1] = e2", x is int[], e1 is an int and also e2 is an int
-        AstType lvType = typesStack.pop();
-        if (!(lvType instanceof IntArrayAstType)) {
-            setInvalid("Array assignment (x[e1] = e2) statement got a non-array argument (as x)");
+        AstType rvType = typesStack.pop();
+        if (!(rvType instanceof IntAstType)) {
+            setInvalid("Array assignment (x[e1] = e2) statement got a non-numeric argument (as e2)");
             return;
         }
 
+        // Check index
         assignArrayStatement.index().accept(this);
         if (!this.isValid) {
             return;
@@ -457,14 +473,19 @@ public class AstSemanticChecksVisitor implements Visitor {
             return;
         }
 
-        assignArrayStatement.rv().accept(this);
+        // Check lv
+        if (!validateInitialized(assignArrayStatement.lv())) {
+            return;
+        }
+
+        visitAssignmentLv(assignArrayStatement.lv());
         if (!this.isValid) {
             return;
         }
 
-        AstType rvType = typesStack.pop();
-        if (!(rvType instanceof IntAstType)) {
-            setInvalid("Array assignment (x[e1] = e2) statement got a non-numeric argument (as e2)");
+        AstType lvType = typesStack.pop();
+        if (!(lvType instanceof IntArrayAstType)) {
+            setInvalid("Array assignment (x[e1] = e2) statement got a non-array argument (as x)");
         }
     }
 
@@ -710,11 +731,8 @@ public class AstSemanticChecksVisitor implements Visitor {
         }
 
         // Check that local vars are initialized before use
-        if (methodVariablesInitializationStates.containsKey(e.id())) {
-            if (methodVariablesInitializationStates.get(e.id()) != InitializationState.INITIALIZED) {
-                setInvalid(String.format("Reference to uninitialized variable '%s'", e.id()));
-                return;
-            }
+        if (!validateInitialized(e.id())) {
+            return;
         }
         typesStack.push(type);
     }
