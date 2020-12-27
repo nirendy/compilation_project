@@ -57,6 +57,7 @@ public class ObjectOrientedUtils {
         /* Creating a mapping between each class in the program to its methods, while taking inheritance into account.
         * Each method has a saved index, which is consistent throughout inheritance */
         Map<String, Map<String, MethodData>> classToMethodsMapping = new HashMap<>();
+        classToMethodsMapping.put(program.mainClass().name(), new HashMap<>());
 
         Map<String, MethodData> classMethods;
         for (ClassDecl classNode : program.classDecls()) {
@@ -68,10 +69,7 @@ public class ObjectOrientedUtils {
             }
 
             for (MethodDecl methodNode : classNode.methoddecls()) {
-                    // A method can override an inherited class. In that case it shouldn't be re-added to the list.
-                if (!classMethods.containsKey(methodNode.name())) {
                     classMethods.put(methodNode.name(), new MethodData(methodNode));
-                }
             }
             classToMethodsMapping.put(classNode.name(), classMethods);
         }
@@ -82,6 +80,7 @@ public class ObjectOrientedUtils {
     private Map<String, Map<String, VarDecl>> createClassToFieldsMapping(Program program) {
         /* Creating a mapping between each class in the program to its fields, while taking inheritance into account. */
         Map<String, Map<String, VarDecl>> classToFieldsMapping = new HashMap<>();
+        classToFieldsMapping.put(program.mainClass().name(), new HashMap<>());
 
         Map<String, VarDecl> classFields;
         for (ClassDecl classNode : program.classDecls()) {
