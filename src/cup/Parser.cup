@@ -64,11 +64,46 @@ scan with
 /* TERMINALS */
 /*************/
 terminal PUBLIC;
+terminal CLASS;
+terminal STATIC;
+terminal VOID;
+terminal STRING_TYPE;
+terminal INT_TYPE;
+terminal STRING_ARRAY_TYPE;
+terminal INT_ARRAY_TYPE;
+terminal COMMA;
+terminal PLUS;
+terminal MINUS;
+terminal MULT;
+terminal DIV;
+terminal LPAREN;
+terminal RPAREN;
+terminal LCURLY;
+terminal RCURLY;
+terminal SEMICOLON;
+terminal ID;
+terminal NUMBER;
+terminal COMMA;
 
 /*****************/
 /* NON TERMINALS */
 /*****************/
 non terminal prog;
+
+
+non terminal classDeclList;
+non terminal classDecl;
+
+non terminal Expr methodDeclList;
+non terminal Expr methodDecl;
+
+non terminal Expr expr;
+non terminal Expr term;
+non terminal Expr factor;
+non terminal Expr operand;
+
+
+non terminal LinkedList<Expr> commaexprlist;
 
 /***********************/
 /* OPERATOR PRECEDENCE */
@@ -83,4 +118,38 @@ start with prog;
 /* PRODUCTION RULES */
 /********************/
 
-prog            ::=     ;
+prog ::= prog c1:classDecl c2:classDeclList {: RESULT = new Program(c1,c2); :}
+;
+
+// add inheritance
+
+classDecl ::= CLASS ID LCURLY methodDeclList RCURLY {: RESULT =  :}
+classDeclList ::= classDecl {: :}
+                    | classDecl COMMA classDeclList
+                    | {::}
+
+expr ::= expr:e1 PLUS term:e2 		{: RESULT = new AddExpr(e1, e2); :}
+         | expr:e1 MINUS term:e2	{: RESULT = new SubtractExpr(e1, e2); :}
+         | term:e					{: RESULT = e; :}
+;
+
+term ::= term:e1 MULT factor:e2		{: RESULT = new MultExpr(e1, e2); :}
+         | factor:e 				{: RESULT = e; :}
+;
+
+factor ::= MINUS operand:e 			{: RESULT = new SubtractExpr(new IntegerLiteralExpr(0), e); :}
+		 | operand:e				{: RESULT = e; :}
+;
+
+operand ::= LPAREN expr:e RPAREN		{: RESULT = e; :}
+         | NUMBER:n					{: RESULT = new IntegerLiteralExpr(999); :}
+         // | MAX LPAREN expr:e commaexprlist:el RPAREN {: el.addFirst(e); RESULT = new MaxExpr(el); :}
+
+;
+
+
+
+commaexprlist ::= COMMA expr: e commaexprlist:el {: el.addFirst(e); RESULT = el; :}
+		 | /* empty */           	{: RESULT = new LinkedList<Expr>(); :}
+
+;
