@@ -15,6 +15,16 @@ public class Main {
             Program prog;
 
             if (inputMethod.equals("parse")) {
+                FileReader fileReader = new FileReader(new File(filename));
+
+                Lexer l = new Lexer(fileReader);
+                Parser p = new Parser(l);
+                Expr expr = (Expr) p.parse().value;
+
+                AstPrintVisitor astPrinter = new AstPrintVisitor();
+                expr.accept(astPrinter);
+                System.out.println(astPrinter.getString());
+
                 throw new UnsupportedOperationException("TODO - Ex. 4");
             } else if (inputMethod.equals("unmarshal")) {
                 AstXMLSerializer xmlSerializer = new AstXMLSerializer();
