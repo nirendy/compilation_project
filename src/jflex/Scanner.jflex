@@ -63,16 +63,16 @@ import java_cup.runtime.*;
 /***********************/
 /* MACRO DECALARATIONS */
 /***********************/
-LineTerminator	    = \r|\n|\r\n
-WhiteSpace		    = {LineTerminator} | [\t\f ]+
+WhiteSpace		    = \s+
 
+TraditionalComment  = "/*" ~"*/"
+EndOfLineComment    = "//.*"
 Comment             = {TraditionalComment} | {EndOfLineComment}
-TraditionalComment  = "/*" [^*] ~"*/" | "/*" "*"+ "/"
-EndOfLineComment    = "//" {InputCharacter}* {LineTerminator}?
 
 Integer			    = 0 | [1-9][0-9]*
 Identifier		    = [:jletter:][:jletterdigit:]*
-ArraySign           = \[\]
+ArraySign           = \s*\[\s*\]
+NewArray            = new\s+int
 
 /******************************/
 /* DOLAR DOLAR - DON'T TOUCH! */
@@ -96,23 +96,23 @@ ArraySign           = \[\]
 "public"                { return symbol(sym.PUBLIC); }
 "static"                { return symbol(sym.STATIC); }
 "void"                  { return symbol(sym.VOID); }
-"main"                  { return symbol(sym.MAIN_FUNC)); }
+"main"                  { return symbol(sym.MAIN_FUNC); }
 "return"                { return symbol(sym.RETURN); }
 
-"System.out.println"    { return symbol(sym.SYSOUT)); }
-"if"                    { return symbol(sym.IF)); }
-"else"                  { return symbol(sym.ELSE)); }
-"while"                 { return symbol(sym.WHILE)); }
+"System.out.println"    { return symbol(sym.SYSOUT); }
+"if"                    { return symbol(sym.IF); }
+"else"                  { return symbol(sym.ELSE); }
+"while"                 { return symbol(sym.WHILE); }
 
 "int"                   { return symbol(sym.INT_TYPE); }
 "boolean"               { return symbol(sym.BOOL_TYPE); }
 "String"{ArraySign}     { return symbol(sym.STRING_ARRAY_TYPE); }
 "int"{ArraySign}        { return symbol(sym.INT_ARRAY_TYPE); }
 
-"new"                   { return symbol(sym.NEW)); }
-{NewArray}/\s*\[        { return symbol(sym.NEW_ARRAY)); }
+"new"                   { return symbol(sym.NEW); }
+{NewArray}/\s*\[        { return symbol(sym.NEW_ARRAY); }       // Note - using lookahead!
 ".length"               { return symbol(sym.ARRAY_LEN); }
-"."{Identifier}/\s*\(   { return symbol(sym.METHOD_CALL); }
+"."{Identifier}/\s*\(   { return symbol(sym.METHOD_CALL); }     // Note - using lookahead!
 "<"                     { return symbol(sym.LT); }
 "!"                     { return symbol(sym.NOT); }
 "&&"                    { return symbol(sym.AND); }
