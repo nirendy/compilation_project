@@ -96,38 +96,39 @@ ArraySign           = \[\]
 "public"                { return symbol(sym.PUBLIC); }
 "static"                { return symbol(sym.STATIC); }
 "void"                  { return symbol(sym.VOID); }
-"main"                  { return symbol(sym.MAIN_FUNC)); }
+"class Main"            { return symbol(sym.MAIN_CLASS_DECL); }
+"main"                  { return symbol(sym.MAIN_FUNC_NAME); } //TODO: Maybe need to start additional INIT STATE? because main is not a reserved name
 "return"                { return symbol(sym.RETURN); }
 
-"System.out.println"    { return symbol(sym.SYSOUT)); }
-"if"                    { return symbol(sym.IF)); }
-"else"                  { return symbol(sym.ELSE)); }
-"while"                 { return symbol(sym.WHILE)); }
+"System\.out\.println"  { return symbol(sym.SYSOUT); }
+"if"                    { return symbol(sym.IF); }
+"else"                  { return symbol(sym.ELSE); }
+"while"                 { return symbol(sym.WHILE); }
 
 "int"                   { return symbol(sym.INT_TYPE); }
 "boolean"               { return symbol(sym.BOOL_TYPE); }
 "String"{ArraySign}     { return symbol(sym.STRING_ARRAY_TYPE); }
 "int"{ArraySign}        { return symbol(sym.INT_ARRAY_TYPE); }
 
-"new"                   { return symbol(sym.NEW)); }
-"new int"               { return symbol(sym.NEW_ARRAY)); }
-".length"               { return symbol(sym.ARRAY_LEN); }
-"<"                     { return symbol(sym.LT); }
-"!"                     { return symbol(sym.NOT); }
-"&&"                    { return symbol(sym.AND); }
-"+"                     { return symbol(sym.PLUS); }
-"-"                     { return symbol(sym.MINUS); }
-"*"                     { return symbol(sym.MULT); }
-"="                     { return symbol(sym.ASSIGN); }
+"new"                   { return symbol(sym.NEW); }
+"new int"               { return symbol(sym.NEW_ARRAY); }
+"\.length"              { return symbol(sym.ARRAY_LEN); }
+"\<"                    { return symbol(sym.LT); }
+"\!"                    { return symbol(sym.NOT); }
+"\&\&"                  { return symbol(sym.AND); }
+"\+"                    { return symbol(sym.PLUS); }
+"\-"                    { return symbol(sym.MINUS); }
+"\*"                    { return symbol(sym.MULT); }
+"\="                    { return symbol(sym.ASSIGN); }
 
-","			            { return symbol(sym.COMMA); }
-"("                     { return symbol(sym.LPAREN); }
-")"                     { return symbol(sym.RPAREN); }
-"["                     { return symbol(sym.LBRACKET); }
-"]"                     { return symbol(sym.RBRACKET); }
-"{"                     { return symbol(sym.LCURLY); }
-"}"                     { return symbol(sym.RCURLY); }
-";"                     { return symbol(sym.SEMICOLON); }
+"\,"		            { return symbol(sym.COMMA); }
+"\("                    { return symbol(sym.LPAREN); }
+"\)"                    { return symbol(sym.RPAREN); }
+"\["                    { return symbol(sym.LBRACKET); }
+"\]"                    { return symbol(sym.RBRACKET); }
+"\{"                    { return symbol(sym.LCURLY); }
+"\}"                    { return symbol(sym.RCURLY); }
+"\;"                    { return symbol(sym.SEMICOLON); }
 
 {Identifier}		    { return symbol(sym.ID, new String(yytext())); }
 "this"                  { return symbol(sym.THIS); }
