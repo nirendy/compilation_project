@@ -91,28 +91,53 @@ ArraySign           = \[\]
 /**************************************************************/
 
 <YYINITIAL> {
-"public"                { return symbol(sym.PUBLIC); }
 "class"                 { return symbol(sym.CLASS); }
+"extends"               { return symbol(sym.EXTENDS); }
+"public"                { return symbol(sym.PUBLIC); }
 "static"                { return symbol(sym.STATIC); }
 "void"                  { return symbol(sym.VOID); }
-"String"                { return symbol(sym.STRING_TYPE); }
+"main"                  { return symbol(sym.MAIN_FUNC)); }
+"return"                { return symbol(sym.RETURN); }
+
+"System.out.println"    { return symbol(sym.SYSOUT)); }
+"if"                    { return symbol(sym.IF)); }
+"else"                  { return symbol(sym.ELSE)); }
+"while"                 { return symbol(sym.WHILE)); }
+
 "int"                   { return symbol(sym.INT_TYPE); }
+"boolean"               { return symbol(sym.BOOL_TYPE); }
 "String"{ArraySign}     { return symbol(sym.STRING_ARRAY_TYPE); }
 "int"{ArraySign}        { return symbol(sym.INT_ARRAY_TYPE); }
-","			            { return symbol(sym.COMMA); }
+
+"new"                   { return symbol(sym.NEW)); }
+"new int"               { return symbol(sym.NEW_ARRAY)); }
+".length"               { return symbol(sym.ARRAY_LEN); }
+"<"                     { return symbol(sym.LT); }
+"!"                     { return symbol(sym.NOT); }
+"&&"                    { return symbol(sym.AND); }
 "+"                     { return symbol(sym.PLUS); }
 "-"                     { return symbol(sym.MINUS); }
 "*"                     { return symbol(sym.MULT); }
-"/"                     { return symbol(sym.DIV); }
+"="                     { return symbol(sym.ASSIGN); }
+
+","			            { return symbol(sym.COMMA); }
 "("                     { return symbol(sym.LPAREN); }
 ")"                     { return symbol(sym.RPAREN); }
+"["                     { return symbol(sym.LBRACKET); }
+"]"                     { return symbol(sym.RBRACKET); }
 "{"                     { return symbol(sym.LCURLY); }
 "}"                     { return symbol(sym.RCURLY); }
 ";"                     { return symbol(sym.SEMICOLON); }
+
 {Identifier}		    { return symbol(sym.ID, new String(yytext())); }
+"this"                  { return symbol(sym.THIS); }
 {Integer}               { return symbol(sym.NUMBER, Integer.parseInt(yytext())); }
+"true"                  { return symbol(sym.TRUE); }
+"false"                 { return symbol(sym.FALSE); }
+
 {WhiteSpace}            { /* do nothing */ }
 {Comment}               { /* do nothing */ }
+
 <<EOF>>		            { return symbol(sym.EOF); }
 }
 
