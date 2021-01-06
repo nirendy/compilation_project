@@ -63,16 +63,16 @@ import java_cup.runtime.*;
 /***********************/
 /* MACRO DECALARATIONS */
 /***********************/
-LineTerminator	    = \r|\n|\r\n
-WhiteSpace		    = {LineTerminator} | [\t\f ]+
+WhiteSpace		    = \s+
 
+TraditionalComment  = "/*" ~"*/"
+EndOfLineComment    = "//.*"
 Comment             = {TraditionalComment} | {EndOfLineComment}
-TraditionalComment  = "/*" [^*] ~"*/" | "/*" "*"+ "/"
-EndOfLineComment    = "//" {InputCharacter}* {LineTerminator}?
 
 Integer			    = 0 | [1-9][0-9]*
 Identifier		    = [:jletter:][:jletterdigit:]*
-ArraySign           = \[\]
+ArraySign           = \s*\[\s*\]
+NewArray            = new\s+int
 
 /******************************/
 /* DOLAR DOLAR - DON'T TOUCH! */
@@ -110,8 +110,9 @@ ArraySign           = \[\]
 "int"{ArraySign}        { return symbol(sym.INT_ARRAY_TYPE); }
 
 "new"                   { return symbol(sym.NEW)); }
-"new int"               { return symbol(sym.NEW_ARRAY)); }
+{NewArray}/\s*\[        { return symbol(sym.NEW_ARRAY)); }
 ".length"               { return symbol(sym.ARRAY_LEN); }
+"."{Identifier}/\s*\(   { return symbol(sym.METHOD_CALL); }
 "<"                     { return symbol(sym.LT); }
 "!"                     { return symbol(sym.NOT); }
 "&&"                    { return symbol(sym.AND); }
