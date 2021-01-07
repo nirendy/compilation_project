@@ -113,20 +113,21 @@ terminal        FALSE;
 /*****************/
 
 /* non terminal    Program             prog; */
-non terminal    Expr                prog;
-non terminal    MainClass           mainClass;
-non terminal    ClassDecl           classDecl;
-non terminal    VarDecl             varDecl;
-non terminal    MethodDecl          methodDecl;
+non terminal    Statement               prog;
+non terminal    MainClass               mainClass;
+non terminal    ClassDecl               classDecl;
+non terminal    VarDecl                 varDecl;
+non terminal    MethodDecl              methodDecl;
 
-non terminal    Statement           stmt;
+non terminal    Statement               stmt;
+non terminal    LinkedList<Statement>   stmtList;
 
 non terminal    Expr                expr;
 
-non terminal    LinkedList<Expr>    actuals;
-non terminal    LinkedList<Expr>    moreActuals;
+non terminal    LinkedList<Expr>        actuals;
+non terminal    LinkedList<Expr>        moreActuals;
 
-non terminal    AstType             type;
+non terminal    AstType                 type;
 
 
 /***********************/
@@ -152,7 +153,7 @@ start with prog;
 /* PRODUCTION RULES */
 /********************/
 
-prog        ::=  expr:e             {: RESULT = e; :}
+prog        ::=  stmt:s             {: RESULT = s; :}
 ;
 
 type        ::=   INT_TYPE          {: RESULT = new IntAstType(); :}
@@ -161,11 +162,37 @@ type        ::=   INT_TYPE          {: RESULT = new IntAstType(); :}
                 | ID:classId        {: RESULT = new RefType(classId); :}
 ;
 
-/* Statements */
+/**********************/
+/* Parsing Statements */
+/**********************/
 
+stmtList        ::=   stmt:s stmtList:sl            {: sl.addFirst(s);
+                                                       RESULT = sl;
+                                                    :}
+                    | /* empty */                   {: RESULT = new LinkedList<Statement>(); :}
+;
 
+stmt            ::=   LCURLY stmtList:sl RCURLY     {: RESULT = new BlockStatement(sl); :}
 
-/* Expressions */
+                    | IF LPAREN expr:cond RPAREN stmt:ifCase ELSE stmt:elseCase
+                        {: RESULT = new IfStatement(cond, ifCase, elseCase); :}
+
+                    | WHILE LPAREN expr:cond RPAREN stmt:body
+                        {: RESULT = new WhileStatement(cond, body); :}
+
+                    | SYSOUT LPAREN expr:arg RPAREN SEMICOLON
+                        {: RESULT = new SysoutStatement(arg); :}
+
+                    | ID:lv ASSIGN expr:rv SEMICOLON
+                        {: RESULT = new AssignStatement(lv, rv); :}
+
+                    | ID:lv LBRACKET expr:index RBRACKET ASSIGN expr:rv SEMICOLON
+                        {: RESULT = new AssignArrayStatement(lv, index, rv); :}
+;
+
+/***********************/
+/* Parsing Expressions */
+/***********************/
 
 moreActuals ::=   COMMA expr:e moreActuals:el   {: el.addFirst(e);
                                                    RESULT = el;
