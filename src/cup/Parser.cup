@@ -63,51 +63,85 @@ scan with
 /*************/
 /* TERMINALS */
 /*************/
-terminal PUBLIC;
-terminal CLASS;
-terminal STATIC;
-terminal VOID;
-terminal STRING_TYPE;
-terminal INT_TYPE;
-terminal STRING_ARRAY_TYPE;
-terminal INT_ARRAY_TYPE;
-terminal COMMA;
-terminal PLUS;
-terminal MINUS;
-terminal MULT;
-terminal DIV;
-terminal LPAREN;
-terminal RPAREN;
-terminal LCURLY;
-terminal RCURLY;
-terminal SEMICOLON;
-terminal ID;
-terminal NUMBER;
-terminal COMMA;
+terminal        CLASS;
+terminal        EXTENDS;
+terminal        PUBLIC;
+terminal        STATIC;
+terminal        VOID;
+terminal        MAIN_METHOD;
+terminal        RETURN;
+
+terminal        SYSOUT;
+terminal        IF;
+terminal        ELSE;
+terminal        WHILE;
+
+terminal        INT_TYPE;
+terminal        BOOL_TYPE;
+terminal        STRING_ARRAY_TYPE;
+terminal        INT_ARRAY_TYPE;
+
+terminal        NEW;
+terminal        NEW_ARRAY;
+terminal        ARRAY_LEN;
+terminal        METHOD_CALL;
+terminal        LT;
+terminal        NOT;
+terminal        AND;
+terminal        ADD;
+terminal        SUB;
+terminal        MULT;
+terminal        ASSIGN;
+
+terminal        COMMA;
+terminal        LPAREN;
+terminal        RPAREN;
+terminal        LBRACKET;
+terminal        RBRACKET;
+terminal        LCURLY;
+terminal        RCURLY;
+terminal        SEMICOLON;
+
+terminal String ID;
+terminal        THIS;
+terminal int    NUMBER;
+terminal        TRUE;
+terminal        FALSE;
 
 /*****************/
 /* NON TERMINALS */
 /*****************/
-non terminal prog;
 
+/* non terminal    Program             prog; */
+non terminal    Expr                prog;
+non terminal    MainClass           mainClass;
+non terminal    ClassDecl           classDecl;
+non terminal    VarDecl             varDecl;
+non terminal    MethodDecl          methodDecl;
 
-non terminal classDeclList;
-non terminal classDecl;
+non terminal    Statement           stmt;
 
-non terminal Expr methodDeclList;
-non terminal Expr methodDecl;
+non terminal    Expr                expr;
 
-non terminal Expr expr;
-non terminal Expr term;
-non terminal Expr factor;
-non terminal Expr operand;
+non terminal    LinkedList<Expr>    actuals;
+non terminal    LinkedList<Expr>    moreActuals;
 
+non terminal    AstType             type;
 
-non terminal LinkedList<Expr> commaexprlist;
 
 /***********************/
 /* OPERATOR PRECEDENCE */
 /***********************/
+
+precedence right    ASSIGN;
+precedence left     AND;
+precedence nonassoc LT;
+precedence left     ADD, SUB;
+precedence left     MULT;
+precedence right    NEW, NEW_ARRAY;
+precedence right    NOT;
+precedence left     LBRACKET, LPAREN, LCURLY, METHOD_CALL, ARRAY_LEN;
+
 
 /************************/
 /* INITIAL NON TERMINAL */
@@ -118,38 +152,59 @@ start with prog;
 /* PRODUCTION RULES */
 /********************/
 
-prog ::= prog c1:classDecl c2:classDeclList {: RESULT = new Program(c1,c2); :}
+prog        ::=  expr:e             {: RESULT = e; :}
 ;
 
-// add inheritance
-
-classDecl ::= CLASS ID LCURLY methodDeclList RCURLY {: RESULT =  :}
-classDeclList ::= classDecl {: :}
-                    | classDecl COMMA classDeclList
-                    | {::}
-
-expr ::= expr:e1 PLUS term:e2 		{: RESULT = new AddExpr(e1, e2); :}
-         | expr:e1 MINUS term:e2	{: RESULT = new SubtractExpr(e1, e2); :}
-         | term:e					{: RESULT = e; :}
+type        ::=   INT_TYPE          {: RESULT = new IntAstType(); :}
+                | BOOL_TYPE         {: RESULT = new BoolAstType(); :}
+                | INT_ARRAY_TYPE    {: RESULT = new IntArrayAstType(); :}
+                | ID:classId        {: RESULT = new RefType(classId); :}
 ;
 
-term ::= term:e1 MULT factor:e2		{: RESULT = new MultExpr(e1, e2); :}
-         | factor:e 				{: RESULT = e; :}
+/* Statements */
+
+
+
+/* Expressions */
+
+moreActuals ::=   COMMA expr:e moreActuals:el   {: el.addFirst(e);
+                                                   RESULT = el;
+                                                :}
+                | /* empty */                   {: RESULT = new LinkedList<Expr>(); :}
 ;
 
-factor ::= MINUS operand:e 			{: RESULT = new SubtractExpr(new IntegerLiteralExpr(0), e); :}
-		 | operand:e				{: RESULT = e; :}
+actuals     ::=   expr:e moreActuals:el {: el.addFirst(e);
+                                           RESULT = el;
+                                        :}
+                | /* empty */           {: RESULT = new LinkedList<Expr>(); :}
 ;
 
-operand ::= LPAREN expr:e RPAREN		{: RESULT = e; :}
-         | NUMBER:n					{: RESULT = new IntegerLiteralExpr(999); :}
-         // | MAX LPAREN expr:e commaexprlist:el RPAREN {: el.addFirst(e); RESULT = new MaxExpr(el); :}
+expr        ::=   TRUE              {: RESULT = new TrueExpr(); :}
+                | FALSE             {: RESULT = new TrueExpr(); :}
+                | NUMBER:num        {: RESULT = new IntegerLiteralExpr(num); :}
+                | ID:id             {: RESULT = new IdentifierExpr(id); :}
+                | THIS              {: RESULT = new ThisExpr(); :}
 
-;
+                | NEW ID:classId LPAREN RPAREN
+                    {: RESULT = new NewObjectExpr(classId); :}
 
+                | NEW_ARRAY LBRACKET NUMBER:length RBRACKET
+                    {: RESULT = new NewIntArrayExpr(); :}
 
+                | expr:arrayExpr ARRAY_LEN
+                    {: RESULT = new ArrayLengthExpr(arrayExpr); :}
 
-commaexprlist ::= COMMA expr: e commaexprlist:el {: el.addFirst(e); RESULT = el; :}
-		 | /* empty */           	{: RESULT = new LinkedList<Expr>(); :}
+                | expr:ownerExpr METHOD_CALL ID:methodId LPAREN actuals:el RPAREN
+                    {: RESULT = new MethodCallExpr(ownerExpr, methodId, el); :}
 
+                | expr:arrayExpr LBRACKET expr:indexExpr RBRACKET
+                    {: RESULT = new ArrayAccessExpr(arrayExpr, indexExpr); :}
+
+                | LPAREN expr:e RPAREN  {: RESULT = e; :}
+                | NOT expr:e            {: RESULT = new NotExpr(e); :}
+                | expr:e1 LT expr:e2    {: RESULT = new LtExpr(e1, e2); :}
+                | expr:e1 AND expr:e2   {: RESULT = new AndExpr(e1, e2); :}
+                | expr:e1 MULT expr:e2  {: RESULT = new MultExpr(e1, e2); :}
+                | expr:e1 ADD expr:e2   {: RESULT = new AddExpr(e1, e2); :}
+                | expr:e1 SUB expr:e2   {: RESULT = new SubtractExpr(e1, e2); :}
 ;
