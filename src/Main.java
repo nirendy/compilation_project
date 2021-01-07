@@ -19,10 +19,10 @@ public class Main {
 
                 Lexer l = new Lexer(fileReader);
                 Parser p = new Parser(l);
-                Statement stmt = (Statement) (p.parse().value);
+                MethodDecl method = (MethodDecl) (p.parse().value);
 
                 AstPrintVisitor astPrinter = new AstPrintVisitor();
-                stmt.accept(astPrinter);
+                method.accept(astPrinter);
                 System.out.println(astPrinter.getString());
 
                 throw new UnsupportedOperationException("TODO - Ex. 4");
