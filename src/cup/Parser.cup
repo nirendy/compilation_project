@@ -113,16 +113,21 @@ terminal        FALSE;
 /*****************/
 
 /* non terminal    Program             prog; */
-non terminal    Statement               prog;
+non terminal    MethodDecl              prog;
 non terminal    MainClass               mainClass;
 non terminal    ClassDecl               classDecl;
+
+non terminal    FormalArg               formal;
+non terminal    LinkedList<FormalArg>   moreFormals;
+non terminal    LinkedList<FormalArg>   formalsList;
 non terminal    VarDecl                 varDecl;
+non terminal    LinkedList<VarDecl>     varsList;
 non terminal    MethodDecl              methodDecl;
 
 non terminal    Statement               stmt;
 non terminal    LinkedList<Statement>   stmtList;
 
-non terminal    Expr                expr;
+non terminal    Expr                    expr;
 
 non terminal    LinkedList<Expr>        actuals;
 non terminal    LinkedList<Expr>        moreActuals;
@@ -153,13 +158,48 @@ start with prog;
 /* PRODUCTION RULES */
 /********************/
 
-prog        ::=  stmt:s             {: RESULT = s; :}
+prog        ::=  methodDecl:m             {: RESULT = m; :}
 ;
+
+/*******************************/
+/* Parsing Method Declarations */
+/*******************************/
 
 type        ::=   INT_TYPE          {: RESULT = new IntAstType(); :}
                 | BOOL_TYPE         {: RESULT = new BoolAstType(); :}
                 | INT_ARRAY_TYPE    {: RESULT = new IntArrayAstType(); :}
                 | ID:classId        {: RESULT = new RefType(classId); :}
+;
+
+formal      ::=   type:type ID:name             {: RESULT = new FormalArg(type, name, 17); :}
+;
+
+moreFormals ::=   COMMA formal:f moreFormals:fl {: fl.addFirst(f);
+                                                   RESULT = fl;
+                                                :}
+                | /* empty */                   {: RESULT = new LinkedList<FormalArg>(); :}
+;
+
+formalsList ::=   formal:f moreFormals:fl       {: fl.addFirst(f);
+                                                   RESULT = fl;
+                                                :}
+                | /* empty */                   {: RESULT = new LinkedList<FormalArg>(); :}
+;
+
+varDecl     ::=   type:type ID:name SEMICOLON   {: RESULT = new VarDecl(type, name, 17); :}
+;
+
+varsList    ::=   varsList:vl varDecl:var       {: vl.addLast(var);
+                                                   RESULT = vl;
+                                                :}
+                | /* empty */                   {: RESULT = new LinkedList<VarDecl>(); :}
+;
+
+methodDecl  ::=   PUBLIC type:rType ID:name LPAREN formalsList:fl RPAREN LCURLY
+                  varsList:vl
+                  stmtList:body
+                  RETURN expr:ret SEMICOLON RCURLY
+                    {: RESULT = new MethodDecl(rType, name, fl, vl, body, ret, 17); :}
 ;
 
 /**********************/

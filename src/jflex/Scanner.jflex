@@ -66,7 +66,7 @@ import java_cup.runtime.*;
 WhiteSpace		    = \s+
 
 TraditionalComment  = "/*" ~"*/"
-EndOfLineComment    = "//.*"
+EndOfLineComment    = "//".*
 Comment             = {TraditionalComment} | {EndOfLineComment}
 
 Integer			    = 0 | [1-9][0-9]*
