@@ -26,6 +26,7 @@ parser code
 	public void report_error(String message, Object info)
 	{
 	    System.err.print("Syntax error at line " + lexer.getLine() + " of input. Parser\n");
+        //System.err.print("Syntax error at line " + lexer.getLine() + ", at position " + lexer.getCharPos() + " of input. Parser\n");
 		System.exit(1);
 	}
 :}
@@ -55,6 +56,7 @@ scan with
 	return s;
      } catch (java.lang.Error e) {
          System.err.print("Syntax error at line " + lexer.getLine() + " of input. Lexer\n");
+         //System.err.print("Syntax error at line: " + lexer.getLine() + ", at position " + lexer.getCharPos() + " of input. Lexer\n");
          System.exit(1);
          return null;
      }
@@ -218,7 +220,7 @@ type        ::=   INT_TYPE          {: RESULT = new IntAstType(); :}
                 | ID:classId        {: RESULT = new RefType(classId); :}
 ;
 
-formal      ::=   type:type ID:name             {: RESULT = new FormalArg(type, name, 17); :}
+formal      ::=   type:type ID:name             {: RESULT = new FormalArg(type, name, lexer.getLine()); :}
 ;
 
 moreFormals ::=   COMMA formal:f moreFormals:fl {: fl.addFirst(f);
@@ -233,7 +235,7 @@ formalsList ::=   formal:f moreFormals:fl       {: fl.addFirst(f);
                 | /* empty */                   {: RESULT = new LinkedList<FormalArg>(); :}
 ;
 
-varDecl     ::=   type:type ID:name SEMICOLON   {: RESULT = new VarDecl(type, name, 17); :}
+varDecl     ::=   type:type ID:name SEMICOLON   {: RESULT = new VarDecl(type, name, lexer.getLine()); :}
 ;
 
 varsList    ::=   varsList:vl varDecl:var       {: vl.addLast(var);
@@ -247,7 +249,7 @@ methodDecl  ::=   PUBLIC type:rType ID:name LPAREN formalsList:fl RPAREN LCURLY
                   stmtList:body
                   RETURN expr:ret SEMICOLON
                   RCURLY
-                    {: RESULT = new MethodDecl(rType, name, fl, vl, body, ret, 17); :}
+                    {: RESULT = new MethodDecl(rType, name, fl, vl, body, ret, lexer.getLine()); :}
 ;
 
 /**********************/
@@ -295,7 +297,7 @@ actuals     ::=   expr:e moreActuals:el {: el.addFirst(e);
 ;
 
 expr        ::=   TRUE              {: RESULT = new TrueExpr(); :}
-                | FALSE             {: RESULT = new TrueExpr(); :}
+                | FALSE             {: RESULT = new FalseExpr(); :}
                 | NUMBER:num        {: RESULT = new IntegerLiteralExpr(num); :}
                 | ID:id             {: RESULT = new IdentifierExpr(id); :}
                 | THIS              {: RESULT = new ThisExpr(); :}
@@ -303,8 +305,8 @@ expr        ::=   TRUE              {: RESULT = new TrueExpr(); :}
                 | NEW ID:classId LPAREN RPAREN
                     {: RESULT = new NewObjectExpr(classId); :}
 
-                | NEW_ARRAY LBRACKET NUMBER:length RBRACKET
-                    {: RESULT = new NewIntArrayExpr(); :}
+                | NEW_ARRAY LBRACKET expr:lengthExpr RBRACKET
+                    {: RESULT = new NewIntArrayExpr(lengthExpr); :}
 
                 | expr:arrayExpr ARRAY_LEN
                     {: RESULT = new ArrayLengthExpr(arrayExpr); :}
