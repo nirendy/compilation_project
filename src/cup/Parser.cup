@@ -112,9 +112,10 @@ terminal        FALSE;
 /* NON TERMINALS */
 /*****************/
 
-/* non terminal    Program             prog; */
-non terminal    ClassDecl               prog;
-non terminal    MainClass               mainClass;
+non terminal    Program                 prog;
+non terminal    LinkedList<ClassDecl>   classList;
+
+non terminal    MainClass               mainCls;
 
 non terminal    String                  extClass;
 non terminal    LinkedList<MethodDecl>  methods;
@@ -157,11 +158,33 @@ precedence left     LBRACKET, LPAREN, LCURLY, METHOD_CALL, ARRAY_LEN;
 /************************/
 start with prog;
 
-/********************/
-/* PRODUCTION RULES */
-/********************/
+/******************************************/
+/*            PRODUCTION RULES            */
+/******************************************/
 
-prog        ::=  classDecl:c             {: RESULT = c; :}
+/*******************/
+/* Parsing Program */
+/*******************/
+
+prog        ::=   mainCls:main classList:cl  {: RESULT = new Program(main, cl); :}
+;
+
+classList   ::=   classList:cl classDecl:cls    {: cl.addLast(cls);
+                                                   RESULT = cl;
+                                                :}
+                | /* empty */                   {: RESULT = new LinkedList<ClassDecl>(); :}
+;
+
+/**********************/
+/* Parsing Main Class */
+/**********************/
+
+mainCls     ::=   CLASS ID:name LCURLY
+                  PUBLIC STATIC VOID MAIN_METHOD
+                  LPAREN STRING_ARRAY_TYPE ID:argsName RPAREN
+                  LCURLY stmt:mainStatement RCURLY
+                  RCURLY
+                    {: RESULT = new MainClass(name, argsName, mainStatement); :}
 ;
 
 /*******************************/

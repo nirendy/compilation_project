@@ -19,13 +19,12 @@ public class Main {
 
                 Lexer l = new Lexer(fileReader);
                 Parser p = new Parser(l);
-                ClassDecl classDecl = (ClassDecl) (p.parse().value);
+                prog = (Program) (p.parse().value);
 
                 AstPrintVisitor astPrinter = new AstPrintVisitor();
-                classDecl.accept(astPrinter);
+                prog.accept(astPrinter);
                 System.out.println(astPrinter.getString());
 
-                throw new UnsupportedOperationException("TODO - Ex. 4");
             } else if (inputMethod.equals("unmarshal")) {
                 AstXMLSerializer xmlSerializer = new AstXMLSerializer();
                 prog = xmlSerializer.deserialize(new File(filename));
