@@ -147,7 +147,7 @@ non terminal    AstType                 type;
 
 precedence right    ASSIGN;
 precedence left     AND;
-precedence nonassoc LT;
+precedence left     LT;
 precedence left     ADD, SUB;
 precedence left     MULT;
 precedence right    NEW, NEW_ARRAY;
