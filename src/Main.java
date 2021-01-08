@@ -23,7 +23,6 @@ public class Main {
 
                 AstPrintVisitor astPrinter = new AstPrintVisitor();
                 prog.accept(astPrinter);
-                System.out.println(astPrinter.getString());
 
             } else if (inputMethod.equals("unmarshal")) {
                 AstXMLSerializer xmlSerializer = new AstXMLSerializer();
