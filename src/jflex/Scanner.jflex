@@ -70,7 +70,7 @@ EndOfLineComment    = "//".*
 Comment             = {TraditionalComment} | {EndOfLineComment}
 
 Integer			    = 0 | [1-9][0-9]*
-Identifier		    = [:jletter:][:jletterdigit:]*
+Identifier		    = [a-zA-Z][_a-zA-Z0-9]*
 ArraySign           = \s*\[\s*\]
 NewArray            = new\s+int
 
