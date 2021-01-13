@@ -21,9 +21,6 @@ public class Main {
                 Parser p = new Parser(l);
                 prog = (Program) (p.parse().value);
 
-                AstPrintVisitor astPrinter = new AstPrintVisitor();
-                prog.accept(astPrinter);
-
             } else if (inputMethod.equals("unmarshal")) {
                 AstXMLSerializer xmlSerializer = new AstXMLSerializer();
                 prog = xmlSerializer.deserialize(new File(filename));
